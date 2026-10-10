@@ -32,6 +32,12 @@ class DomainBehaviorTest {
     }
     @Test void invalidGuestsAndCalendarDates(){assertThrows(ApiException.class,()->item("MORNING").calculatePrice(0));assertThrows(ApiException.class,()->Booking.validateDate("2027-02-30"));assertThrows(ApiException.class,()->Booking.validateSlot(item("FULL_DAY"),"14:00"));}
     @Test void terminalBookingCannotReopen(){Booking b=new Booking("PENDING");b.transitionTo("CONFIRMED");b.transitionTo("COMPLETED");assertThrows(ApiException.class,()->b.transitionTo("PENDING"));}
+    @Test void bookingChangesRequireNoticeForTheNewDeparture() {
+        var departureDate=java.time.LocalDate.of(2026,10,12);
+        var departure=departureDate.atTime(5,30).atZone(java.time.ZoneId.of("Asia/Colombo")).toInstant();
+        assertDoesNotThrow(()->Booking.requireChangeNotice(departureDate,"05:30",departure.minus(java.time.Duration.ofHours(24))));
+        assertThrows(ApiException.class,()->Booking.requireChangeNotice(departureDate,"05:30",departure.minus(java.time.Duration.ofHours(24)).plusSeconds(1)));
+    }
     @Test void cashNeverPretendsToBeCollected(){var cash=new CashPayment(100).process();assertEquals("PENDING",cash.status());assertNull(cash.paidAt());assertNull(cash.cardLast4());}
     @Test void cardCannotClaimGatewayCapture(){assertThrows(ApiException.class,()->new CardPayment(100,"Test","4242424242424242","12/35","123").process());}
     @Test void specializedGuideAndReviewContracts(){Guide driver=Guide.create(1,"Driver","+94771234567","LICENSE-1","DRIVER",true);Guide naturalist=Guide.create(2,"Guide","+94771234567","LICENSE-2","NATURALIST",true);assertNotEquals(driver.getAssignmentRole(),naturalist.getAssignmentRole());Review a=new Review(5,"Review"),b=new VerifiedReview(5,"Review");assertNotEquals(a.getType(),b.getType());assertThrows(ApiException.class,()->new Review(6,"Invalid"));}

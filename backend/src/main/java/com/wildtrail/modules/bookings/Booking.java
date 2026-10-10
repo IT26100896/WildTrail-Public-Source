@@ -4,6 +4,9 @@ import com.wildtrail.exception.ApiException;
 import com.wildtrail.modules.safaris.SafariPackage;
 import com.wildtrail.modules.resources.Vehicle;
 import java.time.LocalDate;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +64,13 @@ public final class Booking {
         }
         catch (DateTimeParseException exception) {
             throw ApiException.badRequest("Invalid safari date");
+        }
+    }
+
+    public static void requireChangeNotice(LocalDate date, String slot, Instant now) {
+        Instant departure = date.atTime(LocalTime.parse(slot)).atZone(ZoneId.of("Asia/Colombo")).toInstant();
+        if (departure.isBefore(now.plus(java.time.Duration.ofHours(24)))) {
+            throw ApiException.badRequest("Changes require at least 24 hours notice");
         }
     }
 }
