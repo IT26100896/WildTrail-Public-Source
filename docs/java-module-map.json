@@ -1,0 +1,70 @@
+{
+  "bookings": [
+    "Booking.java",
+    "BookingController.java",
+    "BookingService.java",
+    "JdbcBookingRepository.java"
+  ],
+  "payments": [
+    "CardPayment.java",
+    "CashPayment.java",
+    "DemoCardPayment.java",
+    "JdbcPaymentRepository.java",
+    "Payment.java",
+    "PaymentController.java",
+    "PaymentFactory.java",
+    "PaymentProcessor.java",
+    "PaymentResult.java",
+    "PaymentService.java",
+    "ReceiptController.java"
+  ],
+  "resources": [
+    "FamilySafariJeep.java",
+    "FileGuideRepository.java",
+    "Guide.java",
+    "GuideController.java",
+    "HiluxSafariJeep.java",
+    "JdbcVehicleRepository.java",
+    "LuxuryJeep.java",
+    "NaturalistGuide.java",
+    "SafariJeep.java",
+    "TeamController.java",
+    "Vehicle.java",
+    "VehicleController.java",
+    "VehicleService.java"
+  ],
+  "reviews": [
+    "JdbcReviewRepository.java",
+    "MyReviewsController.java",
+    "Review.java",
+    "ReviewController.java",
+    "ReviewService.java",
+    "VerifiedReview.java"
+  ],
+  "safaris": [
+    "EveningSafari.java",
+    "FamilySafari.java",
+    "FullDaySafari.java",
+    "HalfDaySafari.java",
+    "JdbcPackageRepository.java",
+    "MorningSafari.java",
+    "PackageController.java",
+    "PackageService.java",
+    "PhotographySafari.java",
+    "PrivateSafari.java",
+    "SafariPackage.java"
+  ],
+  "users": [
+    "Admin.java",
+    "AdminAccountController.java",
+    "AuthController.java",
+    "AuthService.java",
+    "Customer.java",
+    "CustomerController.java",
+    "CustomerService.java",
+    "JdbcCustomerRepository.java",
+    "JdbcUserRepository.java",
+    "ProfileController.java",
+    "User.java"
+  ]
+}
