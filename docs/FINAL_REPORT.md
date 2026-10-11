@@ -1,8 +1,10 @@
 # WildTrail Safari Booking System
 
-**SE1020 — Object Oriented Programming**  
-**Group:** 26-MTR-Y1S2-WD-009  
-**Repository:** [IT26100896/WildTrail-Public-Source](https://github.com/IT26100896/WildTrail-Public-Source)  
+**SE1020 — Object Oriented Programming**
+
+**Group:** 26-MTR-Y1S2-WD-009
+
+**Repository:** [IT26100896/WildTrail-Public-Source](https://github.com/IT26100896/WildTrail-Public-Source)
 **Report date:** 11 October 2026
 
 ## Project overview
