@@ -55,6 +55,20 @@ class ApiIntegrationTest {
     void patchPayment(int id,String next,int expected) throws Exception {mvc.perform(patch("/api/payments/"+id).cookie(admin).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("status",next)))).andExpect(status().is(expected));}
     int paymentId(int bookingId){return jdbc.queryForObject("SELECT id FROM payments WHERE booking_id=?",Integer.class,bookingId);}
 
+    @Test void customerTotalSpentCountsCollectedPaymentsOnly() throws Exception {
+        var created = booking();
+        int bookingId = created.get("id").asInt();
+        var before = json(mvc.perform(get("/api/customers").cookie(admin)).andExpect(status().isOk()).andReturn());
+        assertEquals(1, before.get(0).get("bookingCount").asInt());
+        assertEquals(0, before.get(0).get("totalSpent").asDouble());
+        patchPayment(paymentId(bookingId), "PAID", 200);
+        var paid = json(mvc.perform(get("/api/customers").cookie(admin)).andExpect(status().isOk()).andReturn());
+        assertEquals(created.get("totalAmount").asDouble(), paid.get(0).get("totalSpent").asDouble());
+        patchPayment(paymentId(bookingId), "REFUNDED", 200);
+        var refunded = json(mvc.perform(get("/api/customers").cookie(admin)).andExpect(status().isOk()).andReturn());
+        assertEquals(0, refunded.get(0).get("totalSpent").asDouble());
+    }
+
     @Test void configuredPublicOriginWorksThroughBothCorsAndMutationGuard() throws Exception {
         mvc.perform(post("/api/auth/login").header("Origin","https://campus.example.test").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("email","qa-admin@example.test","password","IntegrationOnly!123"))))
             .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","https://campus.example.test"));
