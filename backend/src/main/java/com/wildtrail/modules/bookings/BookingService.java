@@ -203,10 +203,11 @@ public class BookingService {
         if(!List.of("PENDING","CONFIRMED").contains(row.get("status"))) throw ApiException.conflict("Only active bookings can be changed");
         var item=catalog.requirePackage(((Number)row.get("packageId")).intValue());
         var vehicle=vehicles.requireVehicle(((Number)row.get("vehicleId")).intValue());
-        long until=LocalDate.parse(row.get("safariDate").toString()).atTime(java.time.LocalTime.parse(row.get("timeSlot").toString())).atZone(ZoneId.of("Asia/Colombo")).toInstant().toEpochMilli()-System.currentTimeMillis();
-        if(until<86400000L) throw ApiException.badRequest("Changes require at least 24 hours notice");
+        java.time.Instant now = java.time.Instant.now();
+        Booking.requireChangeNotice(LocalDate.parse(row.get("safariDate").toString()), row.get("timeSlot").toString(), now);
         LocalDate date=LocalDate.parse(Booking.validateDate(RequestValues.text(body,"safariDate",10)));
         String slot=RequestValues.text(body,"timeSlot",5); Booking.validateSlot(item,slot);
+        Booking.requireChangeNotice(date, slot, now);
         int guests=RequestValues.integer(body,"guests",1,20);
         double total=Booking.quote(item,vehicle,guests).get("total");
         var payment=payments.paymentForBooking(id);
