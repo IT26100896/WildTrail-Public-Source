@@ -8,6 +8,8 @@ backend/data/
 *.tsbuildinfo
 qa/screenshots/
 qa/*.log
+qa/*-results.json
+qa/responsive-fixes.json
 output/
 
 .env
