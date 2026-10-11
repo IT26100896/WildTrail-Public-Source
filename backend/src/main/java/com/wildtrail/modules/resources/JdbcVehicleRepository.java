@@ -1,6 +1,7 @@
 package com.wildtrail.modules.resources;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,8 +40,21 @@ public class JdbcVehicleRepository {
         return this.jdbc.update("UPDATE vehicles SET name=?, category=?, capacity=?, four_by_four=?, features=?, available=?,\n    price=?, image_url=?, updated_at=NOW() WHERE id=?\n", new Object[]{values.get("name"), values.get("category"), values.get("capacity"), values.get("fourByFour"), values.get("features"), values.get("available"), values.get("price"), values.get("imageUrl"), id}) > 0;
     }
 
-    public boolean hasIncompatibleActiveBooking(int id, int capacity, boolean available) {
-        Integer count = this.jdbc.queryForObject("SELECT COUNT(*) FROM bookings WHERE vehicle_id=? AND safari_date>=CURRENT_DATE AND status IN ('PENDING','CONFIRMED') AND (guests>? OR ?=FALSE)", Integer.class, id, capacity, available);
+    public boolean lockVehicle(int id) {
+        return !this.jdbc.queryForList(
+                "SELECT id FROM vehicles WHERE id=? FOR UPDATE", id).isEmpty();
+    }
+
+    public boolean hasIncompatibleActiveBooking(int id, int capacity,
+                                                boolean available, LocalDate today) {
+        String sql = """
+                SELECT COUNT(*) FROM bookings
+                WHERE vehicle_id = ? AND safari_date >= ?
+                  AND status IN ('PENDING', 'CONFIRMED')
+                  AND (guests > ? OR ? = FALSE)
+                """;
+        Integer count = this.jdbc.queryForObject(
+                sql, Integer.class, id, today, capacity, available);
         return count != null && count > 0;
     }
 

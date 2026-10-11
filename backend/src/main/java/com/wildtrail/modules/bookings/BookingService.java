@@ -96,6 +96,9 @@ public class BookingService {
         safariPackage.validateGuests(guests);
         vehicle.ensureBookableFor(guests);
         this.bookings.lockVehicle(vehicleId);
+        // The vehicle could have changed while this request waited for the row lock.
+        vehicle = this.vehicles.requireVehicle(vehicleId);
+        vehicle.ensureBookableFor(guests);
         if (this.bookings.overlaps(vehicleId, LocalDate.parse(safariDate), slot, safariPackage.getDurationHours(), 0)) {
             throw ApiException.conflict(vehicle.getName() + " is already booked for "
                     + safariDate + " at " + slot + ". Please choose another vehicle.");
@@ -255,7 +258,7 @@ public class BookingService {
         }
 
         SafariPackage item = catalog.requirePackage(((Number) row.get("packageId")).intValue());
-        Vehicle vehicle = vehicles.requireVehicle(((Number) row.get("vehicleId")).intValue());
+        int vehicleId = ((Number) row.get("vehicleId")).intValue();
         Instant now = Instant.now();
         // Both the original and requested departures need at least 24 hours notice.
         Booking.requireChangeNotice(LocalDate.parse(row.get("safariDate").toString()), row.get("timeSlot").toString(), now);
@@ -265,6 +268,8 @@ public class BookingService {
         Booking.validateSlot(item, slot);
         Booking.requireChangeNotice(date, slot, now);
         int guests = RequestValues.integer(body, "guests", 1, 20);
+        bookings.lockVehicle(vehicleId);
+        Vehicle vehicle = vehicles.requireVehicle(vehicleId);
         double total = Booking.quote(item, vehicle, guests).get("total");
         Map<String, Object> payment = payments.paymentForBooking(id);
         if (payment != null && "PAID".equals(payment.get("status"))
@@ -272,7 +277,6 @@ public class BookingService {
             throw ApiException.conflict("Paid bookings cannot change price. Contact staff.");
         }
 
-        bookings.lockVehicle(vehicle.getId());
         if (bookings.overlaps(vehicle.getId(), date, slot, item.getDurationHours(), id)) {
             throw ApiException.conflict("Vehicle is unavailable for this departure");
         }

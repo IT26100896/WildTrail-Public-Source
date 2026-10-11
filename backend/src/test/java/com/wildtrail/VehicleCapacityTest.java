@@ -17,7 +17,9 @@ class VehicleCapacityTest {
             "name", "Safari jeep", "category", "STANDARD", "capacity", 3,
             "fourByFour", true, "features", "Open roof", "available", true,
             "price", 40, "imageUrl", "image"));
-        when(catalog.hasIncompatibleActiveBooking(1, 3, true)).thenReturn(true);
+        when(catalog.lockVehicle(1)).thenReturn(true);
+        when(catalog.hasIncompatibleActiveBooking(eq(1), eq(3), eq(true), any()))
+                .thenReturn(true);
         assertThrows(ApiException.class, () -> service.updateVehicle(1, details));
         verify(catalog, never()).updateVehicle(eq(1), anyMap());
         details.put("capacity", 6);
