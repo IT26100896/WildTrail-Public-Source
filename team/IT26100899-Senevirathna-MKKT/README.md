@@ -11,31 +11,31 @@ Guide schedules, vehicle availability/maintenance fields, driver assignment and 
 
 ## Java files to understand and develop
 
-- `backend/src/main/java/com/wildtrail/modules/resources/FamilySafariJeep.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/FileGuideRepository.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/Guide.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/GuideController.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/HiluxSafariJeep.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/JdbcVehicleRepository.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/LuxuryJeep.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/NaturalistGuide.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/SafariJeep.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/TeamController.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/Vehicle.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/VehicleController.java`
-- `backend/src/main/java/com/wildtrail/modules/resources/VehicleService.java`
+- [`backend/src/main/java/com/wildtrail/modules/resources/FamilySafariJeep.java`](../../backend/src/main/java/com/wildtrail/modules/resources/FamilySafariJeep.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/FileGuideRepository.java`](../../backend/src/main/java/com/wildtrail/modules/resources/FileGuideRepository.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/Guide.java`](../../backend/src/main/java/com/wildtrail/modules/resources/Guide.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/GuideController.java`](../../backend/src/main/java/com/wildtrail/modules/resources/GuideController.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/HiluxSafariJeep.java`](../../backend/src/main/java/com/wildtrail/modules/resources/HiluxSafariJeep.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/JdbcVehicleRepository.java`](../../backend/src/main/java/com/wildtrail/modules/resources/JdbcVehicleRepository.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/LuxuryJeep.java`](../../backend/src/main/java/com/wildtrail/modules/resources/LuxuryJeep.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/NaturalistGuide.java`](../../backend/src/main/java/com/wildtrail/modules/resources/NaturalistGuide.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/SafariJeep.java`](../../backend/src/main/java/com/wildtrail/modules/resources/SafariJeep.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/TeamController.java`](../../backend/src/main/java/com/wildtrail/modules/resources/TeamController.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/Vehicle.java`](../../backend/src/main/java/com/wildtrail/modules/resources/Vehicle.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/VehicleController.java`](../../backend/src/main/java/com/wildtrail/modules/resources/VehicleController.java)
+- [`backend/src/main/java/com/wildtrail/modules/resources/VehicleService.java`](../../backend/src/main/java/com/wildtrail/modules/resources/VehicleService.java)
 
 ## UI files
 
-- `src/app/client/vehicles/page.tsx`
-- `src/app/admin/(panel)/vehicles/page.tsx`
-- `src/app/admin/(panel)/guides/page.tsx`
+- [`src/app/client/vehicles/page.tsx`](../../src/app/client/vehicles/page.tsx)
+- [`src/app/admin/(panel)/vehicles/page.tsx`](../../src/app/admin/%28panel%29/vehicles/page.tsx)
+- [`src/app/admin/(panel)/guides/page.tsx`](../../src/app/admin/%28panel%29/guides/page.tsx)
 
 ## Shared files - change only your own function
 
-- `src/components/client/cards.tsx: VehicleCard`
-- `src/components/admin/managers.tsx: VehiclesManager and GuidesManager`
-- `src/app/client/about/page.tsx: guide/team display`
+- [`src/components/client/cards.tsx`](../../src/components/client/cards.tsx): VehicleCard
+- [`src/components/admin/managers.tsx`](../../src/components/admin/managers.tsx): VehiclesManager and GuidesManager
+- [`src/app/client/about/page.tsx`](../../src/app/client/about/page.tsx): guide/team display
 
 ## Viva demonstration
 
@@ -53,4 +53,4 @@ This app uses H2 SQL for most entities. Guides use real `resources.txt` file CRU
 4. In GitHub Desktop inspect changed files and diff. Enter an accurate commit summary, click Commit to your branch, then Push origin.
 5. Open a pull request into `main`. Wait for review and checks before merging. Do not upload `.local`, `backend/data`, `.env`, `node_modules`, `.next` or `backend/target`.
 
-For IntelliJ IDEA open `backend/pom.xml` as the Maven project. For full setup see `README.md` and `docs/GITHUB_WORKFLOW.md`.
+For IntelliJ IDEA open [`backend/pom.xml`](../../backend/pom.xml) as the Maven project. For full setup see [`README.md`](../../README.md) and [`docs/GITHUB_WORKFLOW.md`](../../docs/GITHUB_WORKFLOW.md).

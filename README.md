@@ -79,7 +79,7 @@ Group **26-MTR-Y1S2-WD-009** follows the six-component Safari Booking System wor
 | 05 | IT26100900 | Lakshani W.G.C | [Payments and receipts](team/IT26100900-Lakshani-WGC/README.md) |
 | 06 | IT26100901 | Gamage C.I.P | [Reviews and feedback](team/IT26100901-Gamage-CIP/README.md) |
 
-Each linked module guide lists the relevant Java classes, UI files, shared code, and viva demonstration. The integrated application stays in **one repository**. Individual ZIPs in the sibling `Team-Member-Handoff` folder provide module reference copies. See the [workload distribution](docs/WORKLOAD_DISTRIBUTION.md) and [GitHub Desktop workflow](docs/GITHUB_WORKFLOW.md).
+Select a module in the table, then click a file path in its guide to open the exact Java or UI source file. Each guide also covers shared code and a viva demonstration. The integrated application stays in **one repository**. Individual ZIPs in the sibling `Team-Member-Handoff` folder provide module reference copies. See the [workload distribution](docs/WORKLOAD_DISTRIBUTION.md) and [GitHub Desktop workflow](docs/GITHUB_WORKFLOW.md).
 
 ## Project layout
 
