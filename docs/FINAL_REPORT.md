@@ -3,7 +3,7 @@
 **SE1020 — Object Oriented Programming**  
 **Group:** 26-MTR-Y1S2-WD-009  
 **Repository:** [IT26100896/WildTrail-Public-Source](https://github.com/IT26100896/WildTrail-Public-Source)  
-**Submission version:** integrated `main` branch
+**Report date:** 11 October 2026
 
 ## Project overview
 
@@ -66,6 +66,6 @@ The full [GitHub commit history](https://github.com/IT26100896/WildTrail-Public-
 
 ## Verification and results
 
-On 11 October 2026, the Java 17 Maven suite passed **57 tests**. Frontend TypeScript, ESLint, and the production build passed. Browser QA against a disposable local H2 database passed **11 customer/staff flow checks**; a separate navigation/authentication suite passed **4 checks**, and responsive checks covered **320–2133 px** widths. Tracked Markdown links were checked: **164 links across 16 files**, with no missing local targets at that point. The [QA report](QA_REPORT.md) records commands, scope, and limits.
+On 11 October 2026, the Java 17 Maven suite passed **57 tests**. Frontend TypeScript, ESLint, and the production build passed. Browser QA against a disposable local H2 database passed **11 customer/staff flow checks**; a separate navigation/authentication suite passed **4 checks**, and responsive checks covered **320–2133 px** widths. Tracked Markdown links were checked: **172 links across 17 files**, with no missing local targets. The [QA report](QA_REPORT.md) records commands, scope, and limits.
 
 These results establish local behavior under the tested configuration. They do not establish live payment processing, email delivery, live park availability, or production hosting. Each member must demonstrate and explain their own Java module during the viva.
