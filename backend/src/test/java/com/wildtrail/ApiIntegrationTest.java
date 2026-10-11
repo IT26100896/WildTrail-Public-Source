@@ -122,6 +122,20 @@ class ApiIntegrationTest {
         mvc.perform(post("/api/bookings/mine").cookie(customer).contentType(MediaType.APPLICATION_JSON).content("{\"id\":"+first.get("id").asInt()+"}")).andExpect(status().isOk()).andExpect(jsonPath("$.paymentStatus").value("FAILED"));
         mvc.perform(post("/api/bookings").cookie(customer).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body))).andExpect(status().isCreated());
     }
+    @Test void availabilityOnlyAcceptsBookableFutureDepartures() throws Exception {
+        String today=LocalDate.now(ZoneId.of("Asia/Colombo")).toString();
+        mvc.perform(get("/api/bookings/quote?availability=1&packageId=1&date="+today+"&slot=05:30")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/bookings/quote?availability=1&packageId=1&date=2026-02-30&slot=05:30")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/bookings/quote?availability=1&packageId=1&date="+date+"&slot=05:30")).andExpect(status().isOk());
+    }
+    @Test void cancelledBookingCannotBeCancelledAgain() throws Exception {
+        int id=booking().get("id").asInt();
+        String path="/api/bookings/mine";
+        String body="{\"id\":"+id+"}";
+        mvc.perform(post(path).cookie(customer).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
+        mvc.perform(post(path).cookie(customer).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isConflict());
+        assertEquals("CANCELLED",jdbc.queryForObject("SELECT status FROM bookings WHERE id=?",String.class,id));
+    }
     @Test void concurrentBookingsAllowExactlyOneReservation() throws Exception {
         var pool=Executors.newFixedThreadPool(2);var latch=new CountDownLatch(1);String body=mapper.writeValueAsString(request());
         Callable<Integer> submit=()->{latch.await();return mvc.perform(post("/api/bookings").cookie(customer).contentType(MediaType.APPLICATION_JSON).content(body)).andReturn().getResponse().getStatus();};

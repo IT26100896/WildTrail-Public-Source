@@ -12,7 +12,6 @@ import com.wildtrail.modules.safaris.PackageService;
 import com.wildtrail.util.RequestValues;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,20 +42,17 @@ public class BookingService {
     }
 
     public List<Integer> availableVehicleIds(String dateText, String slot, Integer packageId) {
-        LocalDate date;
-        try {
-            date = LocalDate.parse(dateText);
-        }
-        catch (DateTimeParseException exception) {
-            throw ApiException.badRequest("Invalid safari date");
-        }
+        LocalDate date = LocalDate.parse(Booking.validateDate(dateText));
         if (slot == null || slot.isBlank()) {
             throw ApiException.badRequest("date and slot are required");
         }
         try { java.time.LocalTime.parse(slot); } catch (RuntimeException e) { throw ApiException.badRequest("Invalid departure time"); }
         int hours=24;
         if (packageId != null) {
-            SafariPackage item=catalog.requirePackage(packageId); Booking.validateSlot(item,slot); hours=item.getDurationHours();
+            SafariPackage item=catalog.requirePackage(packageId);
+            if (!item.isBookable()) throw ApiException.badRequest("This package is not currently bookable");
+            Booking.validateSlot(item,slot);
+            hours=item.getDurationHours();
         }
         final int duration=hours;
         return vehicles.vehicles(true).stream().map(v -> ((Number)v.get("id")).intValue()).filter(id -> !bookings.overlaps(id,date,slot,duration,0)).toList();
@@ -138,8 +134,7 @@ public class BookingService {
 
     @Transactional
     public Map<String, Object> cancelMine(int id, int userId) {
-        LocalDate date;
-        Map<String, Object> row = this.bookings.basic(id);
+        Map<String, Object> row = this.bookings.lockBooking(id);
         if (row == null) {
             throw ApiException.notFound("Booking with id " + id + " was not found");
         }
@@ -147,8 +142,10 @@ public class BookingService {
         if (customer == null || ((Number)row.get("customerId")).intValue() != ((Number)customer.get("id")).intValue()) {
             throw ApiException.forbidden("This booking does not belong to you");
         }
-        Object rawDate = row.get("safariDate");
-        LocalDate safariDate = rawDate instanceof LocalDate ? (date = (LocalDate)rawDate) : LocalDate.parse(rawDate.toString());
+        if (!List.of("PENDING", "CONFIRMED").contains(row.get("status"))) {
+            throw ApiException.conflict("Only active bookings can be cancelled");
+        }
+        LocalDate safariDate = LocalDate.parse(row.get("safariDate").toString());
         long millisUntilSafari = safariDate.atTime(java.time.LocalTime.parse(row.get("timeSlot").toString())).atZone(ZoneId.of("Asia/Colombo")).toInstant().toEpochMilli() - System.currentTimeMillis();
         if (millisUntilSafari < 86400000L) {
             throw ApiException.badRequest("Bookings can only be cancelled at least 24 hours before the safari");
