@@ -11,42 +11,42 @@ Administrator creation, protected accounts, login/logout, password changes and c
 
 ## Java files to understand and develop
 
-- `backend/src/main/java/com/wildtrail/modules/users/Admin.java`
-- `backend/src/main/java/com/wildtrail/modules/users/AdminAccountController.java`
-- `backend/src/main/java/com/wildtrail/modules/users/AuthController.java`
-- `backend/src/main/java/com/wildtrail/modules/users/AuthService.java`
-- `backend/src/main/java/com/wildtrail/modules/users/Customer.java`
-- `backend/src/main/java/com/wildtrail/modules/users/CustomerController.java`
-- `backend/src/main/java/com/wildtrail/modules/users/CustomerService.java`
-- `backend/src/main/java/com/wildtrail/modules/users/JdbcCustomerRepository.java`
-- `backend/src/main/java/com/wildtrail/modules/users/JdbcUserRepository.java`
-- `backend/src/main/java/com/wildtrail/modules/users/ProfileController.java`
-- `backend/src/main/java/com/wildtrail/modules/users/User.java`
-- `backend/src/main/java/com/wildtrail/config/AdminBootstrap.java`
-- `backend/src/main/java/com/wildtrail/controller/SessionController.java`
-- `backend/src/main/java/com/wildtrail/security/SessionCookieService.java`
-- `backend/src/main/java/com/wildtrail/security/SessionAuthenticationFilter.java`
-- `backend/src/main/java/com/wildtrail/security/LoginThrottle.java`
+- [`backend/src/main/java/com/wildtrail/modules/users/Admin.java`](../../backend/src/main/java/com/wildtrail/modules/users/Admin.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/AdminAccountController.java`](../../backend/src/main/java/com/wildtrail/modules/users/AdminAccountController.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/AuthController.java`](../../backend/src/main/java/com/wildtrail/modules/users/AuthController.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/AuthService.java`](../../backend/src/main/java/com/wildtrail/modules/users/AuthService.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/Customer.java`](../../backend/src/main/java/com/wildtrail/modules/users/Customer.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/CustomerController.java`](../../backend/src/main/java/com/wildtrail/modules/users/CustomerController.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/CustomerService.java`](../../backend/src/main/java/com/wildtrail/modules/users/CustomerService.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/JdbcCustomerRepository.java`](../../backend/src/main/java/com/wildtrail/modules/users/JdbcCustomerRepository.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/JdbcUserRepository.java`](../../backend/src/main/java/com/wildtrail/modules/users/JdbcUserRepository.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/ProfileController.java`](../../backend/src/main/java/com/wildtrail/modules/users/ProfileController.java)
+- [`backend/src/main/java/com/wildtrail/modules/users/User.java`](../../backend/src/main/java/com/wildtrail/modules/users/User.java)
+- [`backend/src/main/java/com/wildtrail/config/AdminBootstrap.java`](../../backend/src/main/java/com/wildtrail/config/AdminBootstrap.java)
+- [`backend/src/main/java/com/wildtrail/controller/SessionController.java`](../../backend/src/main/java/com/wildtrail/controller/SessionController.java)
+- [`backend/src/main/java/com/wildtrail/security/SessionCookieService.java`](../../backend/src/main/java/com/wildtrail/security/SessionCookieService.java)
+- [`backend/src/main/java/com/wildtrail/security/SessionAuthenticationFilter.java`](../../backend/src/main/java/com/wildtrail/security/SessionAuthenticationFilter.java)
+- [`backend/src/main/java/com/wildtrail/security/LoginThrottle.java`](../../backend/src/main/java/com/wildtrail/security/LoginThrottle.java)
 
 ## UI files
 
-- `src/app/client/login/page.tsx`
-- `src/app/client/register/page.tsx`
-- `src/app/client/profile/page.tsx`
-- `src/app/admin/login/page.tsx`
-- `src/app/admin/(panel)/accounts/page.tsx`
-- `src/app/admin/(panel)/customers/page.tsx`
-- `src/components/admin/AdminAccountsManager.tsx`
-- `src/components/admin/AdminLoginForm.tsx`
-- `src/components/client/AuthPanel.tsx`
-- `src/components/client/ProfileForm.tsx`
+- [`src/app/client/login/page.tsx`](../../src/app/client/login/page.tsx)
+- [`src/app/client/register/page.tsx`](../../src/app/client/register/page.tsx)
+- [`src/app/client/profile/page.tsx`](../../src/app/client/profile/page.tsx)
+- [`src/app/admin/login/page.tsx`](../../src/app/admin/login/page.tsx)
+- [`src/app/admin/(panel)/accounts/page.tsx`](../../src/app/admin/%28panel%29/accounts/page.tsx)
+- [`src/app/admin/(panel)/customers/page.tsx`](../../src/app/admin/%28panel%29/customers/page.tsx)
+- [`src/components/admin/AdminAccountsManager.tsx`](../../src/components/admin/AdminAccountsManager.tsx)
+- [`src/components/admin/AdminLoginForm.tsx`](../../src/components/admin/AdminLoginForm.tsx)
+- [`src/components/client/AuthPanel.tsx`](../../src/components/client/AuthPanel.tsx)
+- [`src/components/client/ProfileForm.tsx`](../../src/components/client/ProfileForm.tsx)
 
 ## Shared files - change only your own function
 
-- `src/components/client/forms.tsx: AuthForm`
-- `src/components/admin/managers.tsx: CustomersManager`
-- `src/components/client/Navbar.tsx: login/logout navigation`
-- `src/lib/session.ts: session lookup`
+- [`src/components/client/forms.tsx`](../../src/components/client/forms.tsx): AuthForm
+- [`src/components/admin/managers.tsx`](../../src/components/admin/managers.tsx): CustomersManager
+- [`src/components/client/Navbar.tsx`](../../src/components/client/Navbar.tsx): login/logout navigation
+- [`src/lib/session.ts`](../../src/lib/session.ts): session lookup
 
 ## Viva demonstration
 
@@ -64,4 +64,4 @@ This app uses H2 SQL for most entities. Guides use real `resources.txt` file CRU
 4. In GitHub Desktop inspect changed files and diff. Enter an accurate commit summary, click Commit to your branch, then Push origin.
 5. Open a pull request into `main`. Wait for review and checks before merging. Do not upload `.local`, `backend/data`, `.env`, `node_modules`, `.next` or `backend/target`.
 
-For IntelliJ IDEA open `backend/pom.xml` as the Maven project. For full setup see `README.md` and `docs/GITHUB_WORKFLOW.md`.
+For IntelliJ IDEA open [`backend/pom.xml`](../../backend/pom.xml) as the Maven project. For full setup see [`README.md`](../../README.md) and [`docs/GITHUB_WORKFLOW.md`](../../docs/GITHUB_WORKFLOW.md).

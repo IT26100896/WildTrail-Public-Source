@@ -11,33 +11,33 @@ Destinations, public catalogue cards, sample catalogue seed and search/filter be
 
 ## Java files to understand and develop
 
-- `backend/src/main/java/com/wildtrail/modules/safaris/EveningSafari.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/FamilySafari.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/FullDaySafari.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/HalfDaySafari.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/JdbcPackageRepository.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/MorningSafari.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/PackageController.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/PackageService.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/PhotographySafari.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/PrivateSafari.java`
-- `backend/src/main/java/com/wildtrail/modules/safaris/SafariPackage.java`
-- `backend/src/main/java/com/wildtrail/config/DatabaseSeeder.java`
+- [`backend/src/main/java/com/wildtrail/modules/safaris/EveningSafari.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/EveningSafari.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/FamilySafari.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/FamilySafari.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/FullDaySafari.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/FullDaySafari.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/HalfDaySafari.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/HalfDaySafari.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/JdbcPackageRepository.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/JdbcPackageRepository.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/MorningSafari.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/MorningSafari.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/PackageController.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/PackageController.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/PackageService.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/PackageService.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/PhotographySafari.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/PhotographySafari.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/PrivateSafari.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/PrivateSafari.java)
+- [`backend/src/main/java/com/wildtrail/modules/safaris/SafariPackage.java`](../../backend/src/main/java/com/wildtrail/modules/safaris/SafariPackage.java)
+- [`backend/src/main/java/com/wildtrail/config/DatabaseSeeder.java`](../../backend/src/main/java/com/wildtrail/config/DatabaseSeeder.java)
 
 ## UI files
 
-- `src/app/client/safaris/page.tsx`
-- `src/app/client/packages/page.tsx`
-- `src/app/client/destinations/page.tsx`
-- `src/app/admin/(panel)/packages/page.tsx`
-- `src/components/client/cards.tsx`
+- [`src/app/client/safaris/page.tsx`](../../src/app/client/safaris/page.tsx)
+- [`src/app/client/packages/page.tsx`](../../src/app/client/packages/page.tsx)
+- [`src/app/client/destinations/page.tsx`](../../src/app/client/destinations/page.tsx)
+- [`src/app/admin/(panel)/packages/page.tsx`](../../src/app/admin/%28panel%29/packages/page.tsx)
+- [`src/components/client/cards.tsx`](../../src/components/client/cards.tsx)
 
 ## Shared files - change only your own function
 
-- `src/components/client/forms.tsx: PackageExplorer`
-- `src/components/admin/managers.tsx: PackagesManager`
-- `src/components/client/BookingWizard.tsx: package selection`
-- `src/lib/content.ts: catalogue display data`
+- [`src/components/client/forms.tsx`](../../src/components/client/forms.tsx): PackageExplorer
+- [`src/components/admin/managers.tsx`](../../src/components/admin/managers.tsx): PackagesManager
+- [`src/components/client/BookingWizard.tsx`](../../src/components/client/BookingWizard.tsx): package selection
+- [`src/lib/content.ts`](../../src/lib/content.ts): catalogue display data
 
 ## Viva demonstration
 
@@ -55,4 +55,4 @@ This app uses H2 SQL for most entities. Guides use real `resources.txt` file CRU
 4. In GitHub Desktop inspect changed files and diff. Enter an accurate commit summary, click Commit to your branch, then Push origin.
 5. Open a pull request into `main`. Wait for review and checks before merging. Do not upload `.local`, `backend/data`, `.env`, `node_modules`, `.next` or `backend/target`.
 
-For IntelliJ IDEA open `backend/pom.xml` as the Maven project. For full setup see `README.md` and `docs/GITHUB_WORKFLOW.md`.
+For IntelliJ IDEA open [`backend/pom.xml`](../../backend/pom.xml) as the Maven project. For full setup see [`README.md`](../../README.md) and [`docs/GITHUB_WORKFLOW.md`](../../docs/GITHUB_WORKFLOW.md).

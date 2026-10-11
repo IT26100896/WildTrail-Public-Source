@@ -11,31 +11,31 @@ Review moderation, clearly labeled fictional sample reviews, customer feedback a
 
 ## Java files to understand and develop
 
-- `backend/src/main/java/com/wildtrail/modules/reviews/JdbcReviewRepository.java`
-- `backend/src/main/java/com/wildtrail/modules/reviews/MyReviewsController.java`
-- `backend/src/main/java/com/wildtrail/modules/reviews/Review.java`
-- `backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java`
-- `backend/src/main/java/com/wildtrail/modules/reviews/ReviewService.java`
-- `backend/src/main/java/com/wildtrail/modules/reviews/VerifiedReview.java`
-- `backend/src/main/java/com/wildtrail/controller/ContactController.java`
-- `backend/src/main/java/com/wildtrail/controller/InboxController.java`
+- [`backend/src/main/java/com/wildtrail/modules/reviews/JdbcReviewRepository.java`](../../backend/src/main/java/com/wildtrail/modules/reviews/JdbcReviewRepository.java)
+- [`backend/src/main/java/com/wildtrail/modules/reviews/MyReviewsController.java`](../../backend/src/main/java/com/wildtrail/modules/reviews/MyReviewsController.java)
+- [`backend/src/main/java/com/wildtrail/modules/reviews/Review.java`](../../backend/src/main/java/com/wildtrail/modules/reviews/Review.java)
+- [`backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java`](../../backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java)
+- [`backend/src/main/java/com/wildtrail/modules/reviews/ReviewService.java`](../../backend/src/main/java/com/wildtrail/modules/reviews/ReviewService.java)
+- [`backend/src/main/java/com/wildtrail/modules/reviews/VerifiedReview.java`](../../backend/src/main/java/com/wildtrail/modules/reviews/VerifiedReview.java)
+- [`backend/src/main/java/com/wildtrail/controller/ContactController.java`](../../backend/src/main/java/com/wildtrail/controller/ContactController.java)
+- [`backend/src/main/java/com/wildtrail/controller/InboxController.java`](../../backend/src/main/java/com/wildtrail/controller/InboxController.java)
 
 ## UI files
 
-- `src/app/client/reviews/page.tsx`
-- `src/app/client/my-reviews/page.tsx`
-- `src/app/client/contact/page.tsx`
-- `src/app/admin/(panel)/reviews/page.tsx`
-- `src/app/admin/(panel)/messages/page.tsx`
-- `src/components/client/MyReviews.tsx`
-- `src/lib/sample-reviews.ts`
+- [`src/app/client/reviews/page.tsx`](../../src/app/client/reviews/page.tsx)
+- [`src/app/client/my-reviews/page.tsx`](../../src/app/client/my-reviews/page.tsx)
+- [`src/app/client/contact/page.tsx`](../../src/app/client/contact/page.tsx)
+- [`src/app/admin/(panel)/reviews/page.tsx`](../../src/app/admin/%28panel%29/reviews/page.tsx)
+- [`src/app/admin/(panel)/messages/page.tsx`](../../src/app/admin/%28panel%29/messages/page.tsx)
+- [`src/components/client/MyReviews.tsx`](../../src/components/client/MyReviews.tsx)
+- [`src/lib/sample-reviews.ts`](../../src/lib/sample-reviews.ts)
 
 ## Shared files - change only your own function
 
-- `src/components/client/forms.tsx: ReviewForm and ContactForm`
-- `src/components/admin/managers.tsx: ReviewsManager`
-- `src/components/client/interactive.tsx: ReviewCarousel`
-- `src/components/client/sections.tsx: loadPublicReviews`
+- [`src/components/client/forms.tsx`](../../src/components/client/forms.tsx): ReviewForm and ContactForm
+- [`src/components/admin/managers.tsx`](../../src/components/admin/managers.tsx): ReviewsManager
+- [`src/components/client/interactive.tsx`](../../src/components/client/interactive.tsx): ReviewCarousel
+- [`src/components/client/sections.tsx`](../../src/components/client/sections.tsx): loadPublicReviews
 
 ## Viva demonstration
 
@@ -53,4 +53,4 @@ This app uses H2 SQL for most entities. Guides use real `resources.txt` file CRU
 4. In GitHub Desktop inspect changed files and diff. Enter an accurate commit summary, click Commit to your branch, then Push origin.
 5. Open a pull request into `main`. Wait for review and checks before merging. Do not upload `.local`, `backend/data`, `.env`, `node_modules`, `.next` or `backend/target`.
 
-For IntelliJ IDEA open `backend/pom.xml` as the Maven project. For full setup see `README.md` and `docs/GITHUB_WORKFLOW.md`.
+For IntelliJ IDEA open [`backend/pom.xml`](../../backend/pom.xml) as the Maven project. For full setup see [`README.md`](../../README.md) and [`docs/GITHUB_WORKFLOW.md`](../../docs/GITHUB_WORKFLOW.md).
