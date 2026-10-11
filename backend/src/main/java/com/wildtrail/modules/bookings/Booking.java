@@ -8,11 +8,18 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 public final class Booking {
-    private static final Map<String, Set<String>> TRANSITIONS = Map.of("PENDING", Set.of("CONFIRMED", "CANCELLED"), "CONFIRMED", Set.of("COMPLETED", "CANCELLED"), "COMPLETED", Set.of(), "CANCELLED", Set.of());
+    // A completed or cancelled booking cannot move to another state.
+    private static final Map<String, Set<String>> TRANSITIONS = Map.of(
+            "PENDING", Set.of("CONFIRMED", "CANCELLED"),
+            "CONFIRMED", Set.of("COMPLETED", "CANCELLED"),
+            "COMPLETED", Set.of(),
+            "CANCELLED", Set.of());
     private String status;
 
     public Booking(String status) {
@@ -34,30 +41,45 @@ public final class Booking {
     }
 
     public static Map<String, Double> quote(SafariPackage safariPackage, Vehicle vehicle, int guests) {
-        if (!safariPackage.isBookable()) throw ApiException.badRequest("This package is unavailable");
+        if (!safariPackage.isBookable()) {
+            throw ApiException.badRequest("This package is unavailable");
+        }
         vehicle.ensureBookableFor(guests);
         double packageCost = safariPackage.calculatePrice(guests);
         double vehicleCost = vehicle.calculateCost(safariPackage.getDurationHours());
-        return Map.of("packageCost", packageCost, "vehicleCost", vehicleCost, "total", SafariPackage.round(packageCost + vehicleCost));
+        return Map.of(
+                "packageCost", packageCost,
+                "vehicleCost", vehicleCost,
+                "total", SafariPackage.round(packageCost + vehicleCost));
     }
 
-    public static java.util.List<String> slots(SafariPackage item) {
-        java.util.Set<String> slots = new java.util.TreeSet<>();
+    public static List<String> slots(SafariPackage item) {
+        Set<String> slots = new TreeSet<>();
         slots.add(item.getStartTime());
-        if (java.util.Set.of("EVENING", "FAMILY").contains(item.getType())) slots.addAll(java.util.List.of("14:00", "14:30"));
-        else if (item.getType().equals("PRIVATE")) slots.addAll(java.util.List.of("05:30", "06:00", "14:00", "14:30"));
-        else slots.addAll(java.util.List.of("05:30", "06:00"));
-        return slots.stream().filter(s -> java.time.LocalTime.parse(s).toSecondOfDay() + item.getDurationHours()*3600 <= 86400).toList();
+        if (Set.of("EVENING", "FAMILY").contains(item.getType())) {
+            slots.addAll(List.of("14:00", "14:30"));
+        } else if (item.getType().equals("PRIVATE")) {
+            slots.addAll(List.of("05:30", "06:00", "14:00", "14:30"));
+        } else {
+            slots.addAll(List.of("05:30", "06:00"));
+        }
+        // Do not offer a departure that would finish after midnight.
+        return slots.stream()
+                .filter(slot -> LocalTime.parse(slot).toSecondOfDay()
+                        + item.getDurationHours() * 3600 <= 86400)
+                .toList();
     }
 
     public static void validateSlot(SafariPackage item, String slot) {
-        if (!slots(item).contains(slot)) throw ApiException.badRequest("Departure time is not offered by this package");
+        if (!slots(item).contains(slot)) {
+            throw ApiException.badRequest("Departure time is not offered by this package");
+        }
     }
 
     public static String validateDate(String rawDate) {
         try {
             LocalDate date = LocalDate.parse(rawDate);
-            if (!date.isAfter(LocalDate.now(java.time.ZoneId.of("Asia/Colombo")))) {
+            if (!date.isAfter(LocalDate.now(ZoneId.of("Asia/Colombo")))) {
                 throw ApiException.badRequest("Please choose a future safari date");
             }
             return date.toString();
@@ -69,6 +91,7 @@ public final class Booking {
 
     public static void requireChangeNotice(LocalDate date, String slot, Instant now) {
         Instant departure = date.atTime(LocalTime.parse(slot)).atZone(ZoneId.of("Asia/Colombo")).toInstant();
+        // Check the exact departure time in Sri Lanka, not just the calendar date.
         if (departure.isBefore(now.plus(java.time.Duration.ofHours(24)))) {
             throw ApiException.badRequest("Changes require at least 24 hours notice");
         }

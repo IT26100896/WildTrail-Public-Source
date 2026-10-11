@@ -25,6 +25,9 @@ public class ReviewService {
         if(customer==null)throw ApiException.unauthorized("Please sign in to write a review");
         String author=customer.get("fullName").toString();
         String country = RequestValues.optionalText(body, "country");
+        if (country.length() > 80) {
+            throw ApiException.badRequest("Country is too long");
+        }
         int rating = RequestValues.integer(body, "rating", 1, 5);
         String comment = RequestValues.text(body, "comment", 1000);
         com.wildtrail.modules.reviews.Review review=customers.hasCompletedBooking(((Number)customer.get("id")).intValue()) ? new com.wildtrail.modules.reviews.VerifiedReview(rating,comment) : new com.wildtrail.modules.reviews.Review(rating,comment);

@@ -11,31 +11,31 @@ Cash collection, campus-only demo card state, receipts and text file reports bel
 
 ## Java files to understand and develop
 
-- `backend/src/main/java/com/wildtrail/modules/payments/CardPayment.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/CashPayment.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/DemoCardPayment.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/JdbcPaymentRepository.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/Payment.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/PaymentController.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/PaymentFactory.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/PaymentProcessor.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/PaymentResult.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/PaymentService.java`
-- `backend/src/main/java/com/wildtrail/modules/payments/ReceiptController.java`
-- `backend/src/main/java/com/wildtrail/controller/FileReportController.java`
+- [`backend/src/main/java/com/wildtrail/modules/payments/CardPayment.java`](../../backend/src/main/java/com/wildtrail/modules/payments/CardPayment.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/CashPayment.java`](../../backend/src/main/java/com/wildtrail/modules/payments/CashPayment.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/DemoCardPayment.java`](../../backend/src/main/java/com/wildtrail/modules/payments/DemoCardPayment.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/JdbcPaymentRepository.java`](../../backend/src/main/java/com/wildtrail/modules/payments/JdbcPaymentRepository.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/Payment.java`](../../backend/src/main/java/com/wildtrail/modules/payments/Payment.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/PaymentController.java`](../../backend/src/main/java/com/wildtrail/modules/payments/PaymentController.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/PaymentFactory.java`](../../backend/src/main/java/com/wildtrail/modules/payments/PaymentFactory.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/PaymentProcessor.java`](../../backend/src/main/java/com/wildtrail/modules/payments/PaymentProcessor.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/PaymentResult.java`](../../backend/src/main/java/com/wildtrail/modules/payments/PaymentResult.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/PaymentService.java`](../../backend/src/main/java/com/wildtrail/modules/payments/PaymentService.java)
+- [`backend/src/main/java/com/wildtrail/modules/payments/ReceiptController.java`](../../backend/src/main/java/com/wildtrail/modules/payments/ReceiptController.java)
+- [`backend/src/main/java/com/wildtrail/controller/FileReportController.java`](../../backend/src/main/java/com/wildtrail/controller/FileReportController.java)
 
 ## UI files
 
-- `src/app/admin/(panel)/payments/page.tsx`
-- `src/app/admin/(panel)/files/page.tsx`
-- `src/app/client/receipts/[id]/page.tsx`
-- `src/components/client/PrintButton.tsx`
+- [`src/app/admin/(panel)/payments/page.tsx`](../../src/app/admin/%28panel%29/payments/page.tsx)
+- [`src/app/admin/(panel)/files/page.tsx`](../../src/app/admin/%28panel%29/files/page.tsx)
+- [`src/app/client/receipts/[id]/page.tsx`](../../src/app/client/receipts/%5Bid%5D/page.tsx)
+- [`src/components/client/PrintButton.tsx`](../../src/components/client/PrintButton.tsx)
 
 ## Shared files - change only your own function
 
-- `src/components/client/BookingWizard.tsx: payment and confirmation steps`
-- `src/components/admin/managers.tsx: PaymentsManager and FileReportsManager`
-- `src/app/admin/(panel)/dashboard/page.tsx: revenue display`
+- [`src/components/client/BookingWizard.tsx`](../../src/components/client/BookingWizard.tsx): payment and confirmation steps
+- [`src/components/admin/managers.tsx`](../../src/components/admin/managers.tsx): PaymentsManager and FileReportsManager
+- [`src/app/admin/(panel)/dashboard/page.tsx`](../../src/app/admin/%28panel%29/dashboard/page.tsx): revenue display
 
 ## Viva demonstration
 
@@ -53,4 +53,4 @@ This app uses H2 SQL for most entities. Guides use real `resources.txt` file CRU
 4. In GitHub Desktop inspect changed files and diff. Enter an accurate commit summary, click Commit to your branch, then Push origin.
 5. Open a pull request into `main`. Wait for review and checks before merging. Do not upload `.local`, `backend/data`, `.env`, `node_modules`, `.next` or `backend/target`.
 
-For IntelliJ IDEA open `backend/pom.xml` as the Maven project. For full setup see `README.md` and `docs/GITHUB_WORKFLOW.md`.
+For IntelliJ IDEA open [`backend/pom.xml`](../../backend/pom.xml) as the Maven project. For full setup see [`README.md`](../../README.md) and [`docs/GITHUB_WORKFLOW.md`](../../docs/GITHUB_WORKFLOW.md).

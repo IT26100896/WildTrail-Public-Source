@@ -16,13 +16,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value={"/api"})
+@RequestMapping("/api")
 public class BookingController {
     private final BookingService bookings;
 
@@ -39,10 +40,11 @@ public class BookingController {
     @PostMapping(value={"/bookings"})
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Map<String, Object>> create(@RequestBody Map<String, Object> body, Authentication authentication) {
-        SessionUser principal;
-        Object object;
-        SessionUser user = authentication != null && (object = authentication.getPrincipal()) instanceof SessionUser ? (principal = (SessionUser)object) : null;
-        return ResponseEntity.status((int)201).body(this.bookings.create(body, user));
+        SessionUser user = null;
+        if (authentication != null && authentication.getPrincipal() instanceof SessionUser sessionUser) {
+            user = sessionUser;
+        }
+        return ResponseEntity.status(201).body(this.bookings.create(body, user));
     }
 
     @GetMapping(value={"/bookings/mine"})
@@ -72,7 +74,12 @@ public class BookingController {
     }
 
     @GetMapping(value={"/bookings/quote"})
-    public Map<String, ?> quote(@RequestParam(required=false) String packageId, @RequestParam(required=false) String vehicleId, @RequestParam(required=false) String guests, @RequestParam(required=false) String availability, @RequestParam(required=false) String date, @RequestParam(required=false) String slot) {
+    public Map<String, ?> quote(@RequestParam(required = false) String packageId,
+                                @RequestParam(required = false) String vehicleId,
+                                @RequestParam(required = false) String guests,
+                                @RequestParam(required = false) String availability,
+                                @RequestParam(required = false) String date,
+                                @RequestParam(required = false) String slot) {
         if ("1".equals(availability)) {
             if (date == null || slot == null) {
                 throw ApiException.badRequest("date and slot are required");
@@ -83,7 +90,9 @@ public class BookingController {
             catch (DateTimeParseException exception) {
                 throw ApiException.badRequest("Invalid safari date");
             }
-            Integer pkg=packageId==null ? null : RequestValues.integer(Map.of("packageId",packageId),"packageId",1,Integer.MAX_VALUE);
+            Integer pkg = packageId == null ? null
+                    : RequestValues.integer(Map.of("packageId", packageId),
+                            "packageId", 1, Integer.MAX_VALUE);
             return Map.of("availableVehicleIds", this.bookings.availableVehicleIds(date, slot, pkg));
         }
         LinkedHashMap<String, Object> query = new LinkedHashMap<String, Object>();
@@ -113,10 +122,13 @@ public class BookingController {
         return Map.of("ok", true);
     }
 
-    @org.springframework.web.bind.annotation.PutMapping("/bookings/mine/{id}")
+    @PutMapping("/bookings/mine/{id}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public Map<String,Object> editMine(@PathVariable int id, @RequestBody Map<String,Object> body, Authentication auth) {
-        return bookings.editMine(id,((SessionUser)auth.getPrincipal()).uid(),body);
+    public Map<String, Object> editMine(@PathVariable int id,
+                                        @RequestBody Map<String, Object> body,
+                                        Authentication authentication) {
+        int userId = ((SessionUser) authentication.getPrincipal()).uid();
+        return bookings.editMine(id, userId, body);
     }
 
 }
