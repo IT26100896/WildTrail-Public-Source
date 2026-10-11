@@ -2,11 +2,14 @@ package com.wildtrail.modules.resources;
 
 import com.wildtrail.exception.ApiException;
 import com.wildtrail.util.RequestValues;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class VehicleService {
@@ -26,8 +29,20 @@ public class VehicleService {
         return this.catalog.createVehicle(this.parseVehicle(body));
     }
 
+    @Transactional
     public Map<String, Object> updateVehicle(int id, Map<String, Object> body) {
-        if (!this.catalog.updateVehicle(id, this.parseVehicle(body))) {
+        Map<String, Object> values = this.parseVehicle(body);
+        // Booking creation locks this same row before saving. Keep the lock until
+        // this availability check and update have both finished.
+        if (!this.catalog.lockVehicle(id)) {
+            throw ApiException.notFound("Vehicle with id " + id + " was not found");
+        }
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Colombo"));
+        if (this.catalog.hasIncompatibleActiveBooking(
+                id, (int) values.get("capacity"), (boolean) values.get("available"), today)) {
+            throw ApiException.conflict("Vehicle has active bookings that require its current availability and capacity");
+        }
+        if (!this.catalog.updateVehicle(id, values)) {
             throw ApiException.notFound("Vehicle with id " + id + " was not found");
         }
         return this.vehicles(false).stream().filter(row -> ((Number)row.get("id")).intValue() == id).findFirst().orElseThrow(() -> ApiException.notFound("Vehicle with id " + id + " was not found"));

@@ -55,6 +55,40 @@ class ApiIntegrationTest {
     void patchPayment(int id,String next,int expected) throws Exception {mvc.perform(patch("/api/payments/"+id).cookie(admin).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("status",next)))).andExpect(status().is(expected));}
     int paymentId(int bookingId){return jdbc.queryForObject("SELECT id FROM payments WHERE booking_id=?",Integer.class,bookingId);}
 
+    @Test void vehicleChangesRespectFutureBookingCapacityAndAvailability() throws Exception {
+        booking();
+        JsonNode vehicles = json(mvc.perform(get("/api/vehicles?all=1").cookie(admin))
+                .andExpect(status().isOk()).andReturn());
+        JsonNode vehicle = null;
+        for (JsonNode candidate : vehicles) {
+            if (candidate.get("id").asInt() == 1) {
+                vehicle = candidate;
+                break;
+            }
+        }
+        assertNotNull(vehicle);
+        Map<String, Object> update = mapper.convertValue(vehicle,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+
+        update.put("available", false);
+        mvc.perform(put("/api/vehicles/1").cookie(admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(update)))
+                .andExpect(status().isConflict());
+
+        update.put("available", true);
+        update.put("capacity", 1);
+        mvc.perform(put("/api/vehicles/1").cookie(admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(update)))
+                .andExpect(status().isConflict());
+
+        Map<String, Object> saved = jdbc.queryForMap(
+                "SELECT capacity, available FROM vehicles WHERE id = 1");
+        assertTrue((Boolean) saved.get("available"));
+        assertTrue(((Number) saved.get("capacity")).intValue() >= 2);
+    }
+
     @Test void customerTotalSpentCountsCollectedPaymentsOnly() throws Exception {
         var created = booking();
         int bookingId = created.get("id").asInt();
