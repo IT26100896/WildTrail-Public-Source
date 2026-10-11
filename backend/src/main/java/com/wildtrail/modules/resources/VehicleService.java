@@ -27,7 +27,11 @@ public class VehicleService {
     }
 
     public Map<String, Object> updateVehicle(int id, Map<String, Object> body) {
-        if (!this.catalog.updateVehicle(id, this.parseVehicle(body))) {
+        Map<String, Object> values = this.parseVehicle(body);
+        if (this.catalog.hasIncompatibleActiveBooking(id, (int) values.get("capacity"), (boolean) values.get("available"))) {
+            throw ApiException.conflict("Vehicle has active bookings that require its current availability and capacity");
+        }
+        if (!this.catalog.updateVehicle(id, values)) {
             throw ApiException.notFound("Vehicle with id " + id + " was not found");
         }
         return this.vehicles(false).stream().filter(row -> ((Number)row.get("id")).intValue() == id).findFirst().orElseThrow(() -> ApiException.notFound("Vehicle with id " + id + " was not found"));
