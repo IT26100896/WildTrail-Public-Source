@@ -73,12 +73,17 @@ public class PackageService {
         if (!startTime.matches("\\d{2}:\\d{2}")) {
             throw ApiException.badRequest("Start time must be HH:MM");
         }
-        try { java.time.LocalTime.parse(startTime); } catch(RuntimeException e) { throw ApiException.badRequest("Start time must be a valid HH:MM time"); }
+        java.time.LocalTime departure;
+        try { departure = java.time.LocalTime.parse(startTime); } catch(RuntimeException e) { throw ApiException.badRequest("Start time must be a valid HH:MM time"); }
+        int durationHours = RequestValues.integer(body, "durationHours", 1, 24);
+        if (departure.toSecondOfDay() + durationHours * 3600 > 24 * 3600) {
+            throw ApiException.badRequest("Safari must finish on the departure date");
+        }
         LinkedHashMap<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("name", RequestValues.text(body, "name", 120));
         result.put("packageType", type);
         result.put("destinationId", destinationId);
-        result.put("durationHours", RequestValues.integer(body, "durationHours", 1, 24));
+        result.put("durationHours", durationHours);
         result.put("startTime", startTime);
         result.put("maxGuests", RequestValues.integer(body, "maxGuests", 1, 20));
         result.put("basePrice", RequestValues.nonNegative(body, "basePrice"));
