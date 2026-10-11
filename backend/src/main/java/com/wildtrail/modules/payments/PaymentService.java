@@ -44,6 +44,9 @@ public class PaymentService {
     @Transactional
     public void deleteFailedPayment(int id) {
         var payment=payments.payment(id); if(payment==null) throw ApiException.notFound("Payment was not found");
+        int bookingId=((Number)payment.get("bookingId")).intValue();
+        if(bookings.lockBooking(bookingId)==null)throw ApiException.notFound("Booking was not found");
+        payment=payments.payment(id); if(payment==null)throw ApiException.notFound("Payment was not found");
         if(!"FAILED".equals(payment.get("status"))) throw ApiException.conflict("Only failed payment records may be removed");
         payments.deleteFailedPayment(id);
     }
