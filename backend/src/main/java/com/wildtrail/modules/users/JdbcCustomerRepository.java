@@ -15,7 +15,7 @@ public class JdbcCustomerRepository {
     }
 
     public List<Map<String, Object>> customers() {
-        return this.jdbc.queryForList("SELECT c.id, c.user_id AS \"userId\", c.full_name AS \"fullName\", c.email, c.phone, c.country,\n       c.created_at AS \"createdAt\",\n       COUNT(b.id)::int AS \"bookingCount\",\n       COALESCE(SUM(CASE WHEN b.status <> 'CANCELLED' THEN b.total_amount ELSE 0 END), 0)\n           AS \"totalSpent\"\nFROM customers c LEFT JOIN bookings b ON b.customer_id=c.id\nGROUP BY c.id ORDER BY c.created_at DESC\n");
+        return this.jdbc.queryForList("SELECT c.id, c.user_id AS \"userId\", c.full_name AS \"fullName\", c.email, c.phone, c.country,\n       c.created_at AS \"createdAt\",\n       COUNT(b.id)::int AS \"bookingCount\",\n       COALESCE(SUM(CASE WHEN p.status = 'PAID' THEN p.amount ELSE 0 END), 0)\n           AS \"totalSpent\"\nFROM customers c LEFT JOIN bookings b ON b.customer_id=c.id\nLEFT JOIN payments p ON p.booking_id=b.id\nGROUP BY c.id ORDER BY c.created_at DESC\n");
     }
 
     public Map<String, Object> customer(int id) {
