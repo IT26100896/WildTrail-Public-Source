@@ -11,6 +11,8 @@ import com.wildtrail.security.SessionUser;
 import com.wildtrail.modules.safaris.PackageService;
 import com.wildtrail.util.RequestValues;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,11 +29,16 @@ public class BookingService {
     private final com.wildtrail.modules.resources.VehicleService vehicles;
     private final com.wildtrail.modules.payments.JdbcPaymentRepository payments;
 
-    public BookingService(JdbcBookingRepository bookings, JdbcCustomerRepository people, PackageService catalog, com.wildtrail.modules.resources.VehicleService vehicles, com.wildtrail.modules.payments.JdbcPaymentRepository payments) {
+    public BookingService(JdbcBookingRepository bookings,
+                          JdbcCustomerRepository people,
+                          PackageService catalog,
+                          com.wildtrail.modules.resources.VehicleService vehicles,
+                          com.wildtrail.modules.payments.JdbcPaymentRepository payments) {
         this.bookings = bookings;
         this.people = people;
         this.catalog = catalog;
-        this.vehicles=vehicles;this.payments=payments;
+        this.vehicles = vehicles;
+        this.payments = payments;
     }
 
     public Map<String, Double> quote(int packageId, int vehicleId, int guests) {
@@ -46,16 +53,25 @@ public class BookingService {
         if (slot == null || slot.isBlank()) {
             throw ApiException.badRequest("date and slot are required");
         }
-        try { java.time.LocalTime.parse(slot); } catch (RuntimeException e) { throw ApiException.badRequest("Invalid departure time"); }
-        int hours=24;
-        if (packageId != null) {
-            SafariPackage item=catalog.requirePackage(packageId);
-            if (!item.isBookable()) throw ApiException.badRequest("This package is not currently bookable");
-            Booking.validateSlot(item,slot);
-            hours=item.getDurationHours();
+        try {
+            LocalTime.parse(slot);
+        } catch (RuntimeException exception) {
+            throw ApiException.badRequest("Invalid departure time");
         }
-        final int duration=hours;
-        return vehicles.vehicles(true).stream().map(v -> ((Number)v.get("id")).intValue()).filter(id -> !bookings.overlaps(id,date,slot,duration,0)).toList();
+        int hours = 24;
+        if (packageId != null) {
+            SafariPackage item = catalog.requirePackage(packageId);
+            if (!item.isBookable()) {
+                throw ApiException.badRequest("This package is not currently bookable");
+            }
+            Booking.validateSlot(item, slot);
+            hours = item.getDurationHours();
+        }
+        final int duration = hours;
+        return vehicles.vehicles(true).stream()
+                .map(vehicle -> ((Number) vehicle.get("id")).intValue())
+                .filter(id -> !bookings.overlaps(id, date, slot, duration, 0))
+                .toList();
     }
 
     @Transactional
@@ -81,22 +97,31 @@ public class BookingService {
         vehicle.ensureBookableFor(guests);
         this.bookings.lockVehicle(vehicleId);
         if (this.bookings.overlaps(vehicleId, LocalDate.parse(safariDate), slot, safariPackage.getDurationHours(), 0)) {
-            throw ApiException.conflict(vehicle.getName() + " is already booked for " + safariDate + " at " + slot + ". Please choose another vehicle.");
+            throw ApiException.conflict(vehicle.getName() + " is already booked for "
+                    + safariDate + " at " + slot + ". Please choose another vehicle.");
         }
         Map<String, Double> quote = Booking.quote(safariPackage, vehicle, guests);
         String method = RequestValues.text(body, "paymentMethod", 10);
-        if (!method.equals("CASH") && !(method.equals("CARD") && Boolean.TRUE.equals(body.get("cardDemo")))) throw ApiException.badRequest("Online payments are unavailable. Choose cash on arrival.");
+        if (!method.equals("CASH")
+                && !(method.equals("CARD") && Boolean.TRUE.equals(body.get("cardDemo")))) {
+            throw ApiException.badRequest("Online payments are unavailable. Choose cash on arrival.");
+        }
         Payment payment = PaymentFactory.create(method, quote.get("total"), body);
         PaymentResult result = payment.process();
         String name = RequestValues.text(body, "fullName", 120);
         String email = RequestValues.email(body);
         String phone = RequestValues.text(body, "phone", 40);
         String country = RequestValues.optionalText(body, "country");
-        if (user == null || !user.role().equals("ROLE_CUSTOMER")) throw ApiException.unauthorized("Please sign in before booking");
-        if (!email.equalsIgnoreCase(user.email())) throw ApiException.forbidden("Booking email must match your account");
+        if (user == null || !user.role().equals("ROLE_CUSTOMER")) {
+            throw ApiException.unauthorized("Please sign in before booking");
+        }
+        if (!email.equalsIgnoreCase(user.email())) {
+            throw ApiException.forbidden("Booking email must match your account");
+        }
         customer = this.people.customerByUser(user.uid());
         if (customer == null) {
-            customerId = this.people.createGuestCustomer(name, email, phone, country, user == null ? null : Integer.valueOf(user.uid()));
+            customerId = this.people.createGuestCustomer(
+                    name, email, phone, country, Integer.valueOf(user.uid()));
         } else {
             customerId = ((Number)customer.get("id")).intValue();
             this.people.updateCustomerContact(customerId, phone, country);
@@ -110,13 +135,17 @@ public class BookingService {
         values.put("safariDate", LocalDate.parse(safariDate));
         values.put("timeSlot", slot);
         values.put("guests", guests);
-        String requests=RequestValues.optionalText(body,"specialRequests");
-        if(requests.length()>1000 || country.length()>80) throw ApiException.badRequest("Booking details are too long");
+        String requests = RequestValues.optionalText(body, "specialRequests");
+        if (requests.length() > 1000 || country.length() > 80) {
+            throw ApiException.badRequest("Booking details are too long");
+        }
         values.put("specialRequests", requests);
         values.put("totalAmount", quote.get("total"));
         values.put("status", status);
         int bookingId = this.bookings.create(values);
-        this.payments.createPayment(bookingId, result.method(), result.amount(), result.status(), result.transactionRef(), result.cardLast4(), result.paidAt());
+        this.payments.createPayment(
+                bookingId, result.method(), result.amount(), result.status(),
+                result.transactionRef(), result.cardLast4(), result.paidAt());
         return this.detailedByReference((String)values.get("reference"));
     }
 
@@ -146,7 +175,11 @@ public class BookingService {
             throw ApiException.conflict("Only active bookings can be cancelled");
         }
         LocalDate safariDate = LocalDate.parse(row.get("safariDate").toString());
-        long millisUntilSafari = safariDate.atTime(java.time.LocalTime.parse(row.get("timeSlot").toString())).atZone(ZoneId.of("Asia/Colombo")).toInstant().toEpochMilli() - System.currentTimeMillis();
+        // The 24-hour rule uses the actual departure time in Sri Lanka.
+        Instant departure = safariDate.atTime(LocalTime.parse(row.get("timeSlot").toString()))
+                .atZone(ZoneId.of("Asia/Colombo"))
+                .toInstant();
+        long millisUntilSafari = departure.toEpochMilli() - System.currentTimeMillis();
         if (millisUntilSafari < 86400000L) {
             throw ApiException.badRequest("Bookings can only be cancelled at least 24 hours before the safari");
         }
@@ -165,59 +198,97 @@ public class BookingService {
         }
         Booking booking = new Booking((String)row.get("status"));
         booking.transitionTo(next);
-        if(next.equals("COMPLETED")) {
-            var receipt=payments.paymentForBooking(id);
-            var departure=LocalDate.parse(row.get("safariDate").toString()).atTime(java.time.LocalTime.parse(row.get("timeSlot").toString())).atZone(ZoneId.of("Asia/Colombo")).toInstant();
-            if(receipt==null || !"PAID".equals(receipt.get("status"))) throw ApiException.conflict("Record payment before completing the safari");
-            if(departure.isAfter(java.time.Instant.now())) throw ApiException.conflict("A future safari cannot be marked completed");
+        if (next.equals("COMPLETED")) {
+            Map<String, Object> receipt = payments.paymentForBooking(id);
+            Instant departure = LocalDate.parse(row.get("safariDate").toString())
+                    .atTime(LocalTime.parse(row.get("timeSlot").toString()))
+                    .atZone(ZoneId.of("Asia/Colombo"))
+                    .toInstant();
+            if (receipt == null || !"PAID".equals(receipt.get("status"))) {
+                throw ApiException.conflict("Record payment before completing the safari");
+            }
+            if (departure.isAfter(Instant.now())) {
+                throw ApiException.conflict("A future safari cannot be marked completed");
+            }
         }
         this.bookings.updateBookingStatus(id, booking.getStatus());
         if ("CANCELLED".equals(booking.getStatus()) && (payment = this.payments.paymentForBooking(id)) != null) {
-            if ("PENDING".equals(payment.get("status"))) this.payments.updatePaymentStatus(((Number)payment.get("id")).intValue(), "FAILED");
+            if ("PENDING".equals(payment.get("status"))) {
+                this.payments.updatePaymentStatus(((Number)payment.get("id")).intValue(), "FAILED");
+            }
         }
         return this.detailedByReference((String)row.get("reference"));
     }
 
     @Transactional
     public void delete(int id) {
-        var row=bookings.lockBooking(id);
-        if(row==null) throw ApiException.notFound("Booking was not found");
-        if(!"CANCELLED".equals(row.get("status"))) throw ApiException.conflict("Cancel a booking before deleting it");
-        var payment=payments.paymentForBooking(id);
-        if(payment!=null && "PAID".equals(payment.get("status"))) throw ApiException.conflict("Record the completed cash refund before deleting this booking");
+        Map<String, Object> row = bookings.lockBooking(id);
+        if (row == null) {
+            throw ApiException.notFound("Booking was not found");
+        }
+        if (!"CANCELLED".equals(row.get("status"))) {
+            throw ApiException.conflict("Cancel a booking before deleting it");
+        }
+        Map<String, Object> payment = payments.paymentForBooking(id);
+        if (payment != null && "PAID".equals(payment.get("status"))) {
+            throw ApiException.conflict("Record the completed cash refund before deleting this booking");
+        }
         if (!this.bookings.delete(id)) {
             throw ApiException.notFound("Booking with id " + id + " was not found");
         }
     }
 
     @Transactional
-    public Map<String,Object> editMine(int id, int userId, Map<String,Object> body) {
+    public Map<String, Object> editMine(int id, int userId, Map<String, Object> body) {
+        // Lock the booking and guide schedule before checking the new departure.
         bookings.lockGuideSchedule();
-        var row=bookings.lockBooking(id);
-        if(row==null) throw ApiException.notFound("Booking was not found");
-        var customer=people.customerByUser(userId);
-        if(customer==null || !row.get("customerId").equals(customer.get("id"))) throw ApiException.forbidden("This booking does not belong to you");
-        if(!List.of("PENDING","CONFIRMED").contains(row.get("status"))) throw ApiException.conflict("Only active bookings can be changed");
-        var item=catalog.requirePackage(((Number)row.get("packageId")).intValue());
-        var vehicle=vehicles.requireVehicle(((Number)row.get("vehicleId")).intValue());
-        java.time.Instant now = java.time.Instant.now();
+        Map<String, Object> row = bookings.lockBooking(id);
+        if (row == null) {
+            throw ApiException.notFound("Booking was not found");
+        }
+        Map<String, Object> customer = people.customerByUser(userId);
+        if (customer == null || !row.get("customerId").equals(customer.get("id"))) {
+            throw ApiException.forbidden("This booking does not belong to you");
+        }
+        if (!List.of("PENDING", "CONFIRMED").contains(row.get("status"))) {
+            throw ApiException.conflict("Only active bookings can be changed");
+        }
+
+        SafariPackage item = catalog.requirePackage(((Number) row.get("packageId")).intValue());
+        Vehicle vehicle = vehicles.requireVehicle(((Number) row.get("vehicleId")).intValue());
+        Instant now = Instant.now();
+        // Both the original and requested departures need at least 24 hours notice.
         Booking.requireChangeNotice(LocalDate.parse(row.get("safariDate").toString()), row.get("timeSlot").toString(), now);
-        LocalDate date=LocalDate.parse(Booking.validateDate(RequestValues.text(body,"safariDate",10)));
-        String slot=RequestValues.text(body,"timeSlot",5); Booking.validateSlot(item,slot);
+        LocalDate date = LocalDate.parse(
+                Booking.validateDate(RequestValues.text(body, "safariDate", 10)));
+        String slot = RequestValues.text(body, "timeSlot", 5);
+        Booking.validateSlot(item, slot);
         Booking.requireChangeNotice(date, slot, now);
-        int guests=RequestValues.integer(body,"guests",1,20);
-        double total=Booking.quote(item,vehicle,guests).get("total");
-        var payment=payments.paymentForBooking(id);
-        if(payment!=null && "PAID".equals(payment.get("status")) && Double.compare(total,((Number)row.get("totalAmount")).doubleValue())!=0) throw ApiException.conflict("Paid bookings cannot change price. Contact staff.");
+        int guests = RequestValues.integer(body, "guests", 1, 20);
+        double total = Booking.quote(item, vehicle, guests).get("total");
+        Map<String, Object> payment = payments.paymentForBooking(id);
+        if (payment != null && "PAID".equals(payment.get("status"))
+                && Double.compare(total, ((Number) row.get("totalAmount")).doubleValue()) != 0) {
+            throw ApiException.conflict("Paid bookings cannot change price. Contact staff.");
+        }
+
         bookings.lockVehicle(vehicle.getId());
-        if(bookings.overlaps(vehicle.getId(),date,slot,item.getDurationHours(),id)) throw ApiException.conflict("Vehicle is unavailable for this departure");
-        String requests=RequestValues.optionalText(body,"specialRequests"); if(requests.length()>1000) throw ApiException.badRequest("Special requests are too long");
-        bookings.edit(id,date,slot,guests,requests,total);
+        if (bookings.overlaps(vehicle.getId(), date, slot, item.getDurationHours(), id)) {
+            throw ApiException.conflict("Vehicle is unavailable for this departure");
+        }
+        String requests = RequestValues.optionalText(body, "specialRequests");
+        if (requests.length() > 1000) {
+            throw ApiException.badRequest("Special requests are too long");
+        }
+        bookings.edit(id, date, slot, guests, requests, total);
         return detailedByReference(row.get("reference").toString());
     }
 
     private Map<String, Object> detailedByReference(String reference) {
-        return this.bookings.byReference(reference).stream().findFirst().orElseThrow(() -> ApiException.notFound("Booking " + reference + " was not found"));
+        return this.bookings.byReference(reference).stream()
+                .findFirst()
+                .orElseThrow(() -> ApiException.notFound(
+                        "Booking " + reference + " was not found"));
     }
 
     private String newReference() {

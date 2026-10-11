@@ -16,6 +16,15 @@ Availability, date/time, guest count, booking status, customer change/cancellati
 - [`backend/src/main/java/com/wildtrail/modules/bookings/BookingService.java`](../../backend/src/main/java/com/wildtrail/modules/bookings/BookingService.java)
 - [`backend/src/main/java/com/wildtrail/modules/bookings/JdbcBookingRepository.java`](../../backend/src/main/java/com/wildtrail/modules/bookings/JdbcBookingRepository.java)
 
+### Read the Java flow in this order
+
+1. **BookingController.java** receives a web request and passes it to the service. Read `create`, `mine`, `editMine`, and `cancelMine` first.
+2. **BookingService.java** checks the customer, date, package, vehicle, price, payment state, and booking rules. Follow one method at a time; `create` saves a new booking, while `editMine` checks an existing booking before changing it.
+3. **Booking.java** contains the small domain rules: valid status changes, price quote, departure slots, future dates, and 24-hour notice.
+4. **JdbcBookingRepository.java** reads and writes booking rows. The SQL is split into readable blocks; `?` marks values supplied separately to the query.
+
+For a new booking, follow **Controller → Service → Booking rules → Repository**. For a change or cancellation, the service first locks and checks the existing booking, then updates it through the repository. `@Transactional` keeps related database changes together if a step fails. In Java, `i++` means increment `i` by one; the equivalent assignment is `i = i + 1`, not `i + 1 = i`.
+
 ## UI files
 
 - [`src/app/client/booking/page.tsx`](../../src/app/client/booking/page.tsx)
