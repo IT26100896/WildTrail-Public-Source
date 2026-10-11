@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "fullName": "Sample Safari Driver",
+    "phone": "+94000000000",
+    "licenseNumber": "DEMO-DRIVER-001",
+    "specialty": "DRIVER",
+    "available": true
+  },
+  {
+    "id": 2,
+    "fullName": "Sample Naturalist Guide",
+    "phone": "+94000000001",
+    "licenseNumber": "DEMO-GUIDE-002",
+    "specialty": "NATURALIST",
+    "available": true
+  }
+]
