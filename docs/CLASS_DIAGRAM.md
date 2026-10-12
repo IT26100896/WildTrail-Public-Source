@@ -1,6 +1,6 @@
 # One integrated class diagram
 
-This view connects the six business components in one system. It shows the principal implemented model inheritance and service/repository dependencies; the [complete project map](SYSTEM_MAP.md) links every Java class and website page. The `BookingService` dependencies illustrate why package, resource, and payment changes need cross-module review.
+This view connects the six business components in one system. It shows the principal implemented model inheritance and service/repository dependencies; the [complete project map](SYSTEM_MAP.md) links every Java class and website page. The [presentation](WildTrail-Integrated-Presentation.pptx) adds readable UML-style views for each module, the shared Java infrastructure, and the website-to-API flow. Every backend Java class is named across those slides; representative fields and methods are shown for the core classes. The `BookingService` dependencies illustrate why package, resource, and payment changes need cross-module review.
 
 ```mermaid
 classDiagram
