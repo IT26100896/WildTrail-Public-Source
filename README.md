@@ -193,7 +193,7 @@ Each member should understand their module, test their changes, and commit from 
 | [GitHub workflow](docs/GITHUB_WORKFLOW.md) | Clone, branch, commit, push, and pull-request steps |
 | [Viva guide](docs/VIVA_GUIDE.md) | Demonstration flow and OOP explanations |
 | [QA report](docs/QA_REPORT.md) | Test scope, evidence, and limits |
-| [Final report](docs/FINAL_REPORT.md) · [PDF](docs/FINAL_REPORT.pdf) | Project design, implementation, validation, and individual Git evidence |
+| [Final report](docs/FINAL_REPORT.md) | Project design, implementation, validation, and individual Git evidence |
 | [Class diagram](docs/CLASS_DIAGRAM.md) | Domain relationships |
 | [Complete project map](docs/SYSTEM_MAP.md) | Every Java package, website area, owner, and cross-module link |
 | [Technical overview](docs/TECHNICAL_OVERVIEW.md) | Architecture, persistence, business rules, and scope |
