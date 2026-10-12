@@ -122,14 +122,44 @@ Each row is an ownership guide, not a claim that one person wrote every line in 
 ## Project layout
 
 ```text
-backend/   Java API, Maven wrapper, and JUnit tests
-database/  SQL schema and sample catalogue data
-src/       Next.js pages, components, and typed API contracts
-scripts/   Local setup, startup, and optional sharing commands
-qa/        Repeatable browser QA scripts
-docs/      Architecture, workload, QA, viva, and report material
-team/      Member-specific module guides
+WildTrail-Public-Source/
+├── README.md                       Start here: setup, architecture, team, and links
+├── package.json                    Next.js scripts and dependencies
+├── next.config.ts                  /api rewrite to the Java backend
+├── src/
+│   ├── app/client/                 Customer pages: discovery, booking, account, reviews
+│   ├── app/admin/(panel)/          Staff pages: bookings, catalogue, payments, reports
+│   ├── components/client/          Shared customer UI and booking wizard
+│   ├── components/admin/           Shared administration UI
+│   ├── lib/                        API client, session helpers, and site content
+│   └── types/                      Shared TypeScript domain contracts
+├── backend/
+│   ├── pom.xml                     Java 17 / Spring Boot Maven build
+│   └── src/
+│       ├── main/java/com/wildtrail/
+│       │   ├── modules/users/       01: identity and customer records
+│       │   ├── modules/safaris/     02: safari packages and catalogue
+│       │   ├── modules/bookings/    03: reservations and availability
+│       │   ├── modules/resources/   04: guides and vehicles
+│       │   ├── modules/payments/    05: payment state and receipts
+│       │   ├── modules/reviews/     06: reviews and moderation
+│       │   ├── config/              Application configuration and startup
+│       │   ├── controller/          Shared HTTP endpoints
+│       │   ├── repository/          Shared persistence support
+│       │   ├── service/             Shared application services
+│       │   ├── exception/           API error responses
+│       │   ├── util/                Reusable backend helpers
+│       │   └── security/            Session and access checks
+│       ├── main/resources/          Application properties and catalogue seeds
+│       └── test/java/com/wildtrail/ Java domain and API tests
+├── database/                       SQL schema and sample catalogue data
+├── scripts/                        Local setup, startup, and optional sharing
+├── qa/                             Repeatable browser QA scripts
+├── docs/                           Class map, reports, QA, and presentation
+└── team/                           Six member-specific source and viva guides
 ```
+
+Open the [complete project map](docs/SYSTEM_MAP.md) to jump from each component to its individual Java classes and website pages. The [integrated class diagram](docs/CLASS_DIAGRAM.md) connects the components in one view.
 
 The persistent local H2 database is stored at `backend/data/wildtrail.mv.db`. Do not run two API processes against the same H2 file. SQL is authoritative for most records; guide CRUD uses a real text file. Text reports are snapshots, not replacement databases. PostgreSQL configuration is available, but this handoff was verified with H2.
 
