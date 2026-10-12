@@ -81,17 +81,85 @@ Group **26-MTR-Y1S2-WD-009** follows the six-component Safari Booking System wor
 
 Select a module in the table, then click a file path in its guide to open the exact Java or UI source file. Each guide also covers shared code and a viva demonstration. The integrated application stays in **one repository**. Individual ZIPs in the sibling `Team-Member-Handoff` folder provide module reference copies. See the [workload distribution](docs/WORKLOAD_DISTRIBUTION.md) and [GitHub Desktop workflow](docs/GITHUB_WORKFLOW.md).
 
+## One system, six connected components
+
+The modules form one booking journey. A visitor discovers a safari, a customer reserves a package and vehicle, staff assign resources and record payment, and the customer can leave a review. The same Java API validates access and coordinates records across the six components.
+
+```mermaid
+flowchart LR
+    Browser[Next.js customer and staff pages] --> API[Spring Boot API]
+    API --> Users[01 Users and customers]
+    API --> Safaris[02 Safaris and packages]
+    API --> Bookings[03 Bookings and reservations]
+    API --> Resources[04 Guides and vehicles]
+    API --> Payments[05 Payments and receipts]
+    API --> Reviews[06 Reviews and feedback]
+    Bookings --> Users
+    Bookings --> Safaris
+    Bookings --> Resources
+    Bookings --> Payments
+    Reviews --> Users
+    Users --> SQL[(H2 SQL)]
+    Safaris --> SQL
+    Bookings --> SQL
+    Resources --> SQL
+    Resources --> File[(resources.txt)]
+    Payments --> SQL
+    Reviews --> SQL
+```
+
+| Owner | Component and core Java classes | Customer/staff pages and shared UI |
+|---|---|---|
+| **01 · Mekhala · IT26100894** | [User](backend/src/main/java/com/wildtrail/modules/users/User.java), [Customer](backend/src/main/java/com/wildtrail/modules/users/Customer.java), [Admin](backend/src/main/java/com/wildtrail/modules/users/Admin.java), [AuthService](backend/src/main/java/com/wildtrail/modules/users/AuthService.java), [CustomerService](backend/src/main/java/com/wildtrail/modules/users/CustomerService.java) | [Register](src/app/client/register/page.tsx), [login](src/app/client/login/page.tsx), [profile](src/app/client/profile/page.tsx), [staff accounts](src/app/admin/%28panel%29/accounts/page.tsx) |
+| **02 · Mihiran · IT26100895** | [SafariPackage](backend/src/main/java/com/wildtrail/modules/safaris/SafariPackage.java), [PackageService](backend/src/main/java/com/wildtrail/modules/safaris/PackageService.java), [PackageController](backend/src/main/java/com/wildtrail/modules/safaris/PackageController.java) | [Safaris](src/app/client/safaris/page.tsx), [packages](src/app/client/packages/page.tsx), [destinations](src/app/client/destinations/page.tsx), [staff packages](src/app/admin/%28panel%29/packages/page.tsx) |
+| **03 · Nayanajith · IT26100896** | [Booking](backend/src/main/java/com/wildtrail/modules/bookings/Booking.java), [BookingService](backend/src/main/java/com/wildtrail/modules/bookings/BookingService.java), [BookingController](backend/src/main/java/com/wildtrail/modules/bookings/BookingController.java), [JdbcBookingRepository](backend/src/main/java/com/wildtrail/modules/bookings/JdbcBookingRepository.java) | [Booking wizard](src/components/client/BookingWizard.tsx), [my bookings](src/app/client/my-bookings/page.tsx), [staff bookings](src/app/admin/%28panel%29/bookings/page.tsx) |
+| **04 · Senevirathna · IT26100899** | [Guide](backend/src/main/java/com/wildtrail/modules/resources/Guide.java), [Vehicle](backend/src/main/java/com/wildtrail/modules/resources/Vehicle.java), [FileGuideRepository](backend/src/main/java/com/wildtrail/modules/resources/FileGuideRepository.java), [VehicleService](backend/src/main/java/com/wildtrail/modules/resources/VehicleService.java) | [Vehicles](src/app/client/vehicles/page.tsx), [staff guides](src/app/admin/%28panel%29/guides/page.tsx), [staff vehicles](src/app/admin/%28panel%29/vehicles/page.tsx) |
+| **05 · Lakshani · IT26100900** | [Payment](backend/src/main/java/com/wildtrail/modules/payments/Payment.java), [PaymentProcessor](backend/src/main/java/com/wildtrail/modules/payments/PaymentProcessor.java), [PaymentService](backend/src/main/java/com/wildtrail/modules/payments/PaymentService.java), [ReceiptController](backend/src/main/java/com/wildtrail/modules/payments/ReceiptController.java) | [Booking payment step](src/components/client/BookingWizard.tsx), [receipt](src/app/client/receipts/%5Bid%5D/page.tsx), [staff payments](src/app/admin/%28panel%29/payments/page.tsx) |
+| **06 · Gamage · IT26100901** | [Review](backend/src/main/java/com/wildtrail/modules/reviews/Review.java), [VerifiedReview](backend/src/main/java/com/wildtrail/modules/reviews/VerifiedReview.java), [ReviewService](backend/src/main/java/com/wildtrail/modules/reviews/ReviewService.java), [ReviewController](backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java) | [Reviews](src/app/client/reviews/page.tsx), [my reviews](src/app/client/my-reviews/page.tsx), [contact](src/app/client/contact/page.tsx), [staff moderation](src/app/admin/%28panel%29/reviews/page.tsx) |
+
+Each row is an ownership guide, not a claim that one person wrote every line in a shared file. The [complete project map](docs/SYSTEM_MAP.md) lists all Java classes, web routes, shared components, data stores, and cross-module dependencies. The [single integrated class diagram](docs/CLASS_DIAGRAM.md) shows how the six components work together. [Presentation](docs/WildTrail-Integrated-Presentation.pptx) · [PDF copy](docs/WildTrail-Integrated-Presentation.pdf).
+
 ## Project layout
 
 ```text
-backend/   Java API, Maven wrapper, and JUnit tests
-database/  SQL schema and sample catalogue data
-src/       Next.js pages, components, and typed API contracts
-scripts/   Local setup, startup, and optional sharing commands
-qa/        Repeatable browser QA scripts
-docs/      Architecture, workload, QA, viva, and report material
-team/      Member-specific module guides
+WildTrail-Public-Source/
+├── README.md                       Start here: setup, architecture, team, and links
+├── package.json                    Next.js scripts and dependencies
+├── next.config.ts                  /api rewrite to the Java backend
+├── src/
+│   ├── app/client/                 Customer pages: discovery, booking, account, reviews
+│   ├── app/admin/(panel)/          Staff pages: bookings, catalogue, payments, reports
+│   ├── components/client/          Shared customer UI and booking wizard
+│   ├── components/admin/           Shared administration UI
+│   ├── lib/                        API client, session helpers, and site content
+│   └── types/                      Shared TypeScript domain contracts
+├── backend/
+│   ├── pom.xml                     Java 17 / Spring Boot Maven build
+│   └── src/
+│       ├── main/java/com/wildtrail/
+│       │   ├── modules/users/       01: identity and customer records
+│       │   ├── modules/safaris/     02: safari packages and catalogue
+│       │   ├── modules/bookings/    03: reservations and availability
+│       │   ├── modules/resources/   04: guides and vehicles
+│       │   ├── modules/payments/    05: payment state and receipts
+│       │   ├── modules/reviews/     06: reviews and moderation
+│       │   ├── config/              Application configuration and startup
+│       │   ├── controller/          Shared HTTP endpoints
+│       │   ├── repository/          Shared persistence support
+│       │   ├── service/             Shared application services
+│       │   ├── exception/           API error responses
+│       │   ├── util/                Reusable backend helpers
+│       │   └── security/            Session and access checks
+│       ├── main/resources/          Application properties and catalogue seeds
+│       └── test/java/com/wildtrail/ Java domain and API tests
+├── database/                       SQL schema and sample catalogue data
+├── scripts/                        Local setup, startup, and optional sharing
+├── qa/                             Repeatable browser QA scripts
+├── docs/                           Class map, reports, QA, and presentation
+└── team/                           Six member-specific source and viva guides
 ```
+
+Open the [complete project map](docs/SYSTEM_MAP.md) to jump from each component to its individual Java classes and website pages. The [integrated class diagram](docs/CLASS_DIAGRAM.md) connects the components in one view.
 
 The persistent local H2 database is stored at `backend/data/wildtrail.mv.db`. Do not run two API processes against the same H2 file. SQL is authoritative for most records; guide CRUD uses a real text file. Text reports are snapshots, not replacement databases. PostgreSQL configuration is available, but this handoff was verified with H2.
 
@@ -127,6 +195,8 @@ Each member should understand their module, test their changes, and commit from 
 | [QA report](docs/QA_REPORT.md) | Test scope, evidence, and limits |
 | [Final report](docs/FINAL_REPORT.md) · [PDF](docs/FINAL_REPORT.pdf) | Project design, implementation, validation, and individual Git evidence |
 | [Class diagram](docs/CLASS_DIAGRAM.md) | Domain relationships |
+| [Complete project map](docs/SYSTEM_MAP.md) | Every Java package, website area, owner, and cross-module link |
+| [Integrated presentation](docs/WildTrail-Integrated-Presentation.pptx) · [PDF](docs/WildTrail-Integrated-Presentation.pdf) | Whole-system overview, one class map, viva answers, and live demonstration |
 | [Technical overview](docs/TECHNICAL_OVERVIEW.md) | Architecture, persistence, business rules, and scope |
 | [Local public sharing](docs/PUBLIC_SHARING.md) | Optional temporary Cloudflare Quick Tunnel instructions |
 
