@@ -1,6 +1,6 @@
-# Class relationships
+# One integrated class diagram
 
-Focused diagram of implemented OOP relationships. Services/controllers/repositories not shown exhaustively.
+This view connects the six business components in one system. It shows the principal implemented model inheritance and service/repository dependencies; the [complete project map](SYSTEM_MAP.md) links every Java class and website page. The `BookingService` dependencies illustrate why package, resource, and payment changes need cross-module review.
 
 ```mermaid
 classDiagram
@@ -23,11 +23,19 @@ classDiagram
   Payment <|-- CashPayment
   Payment <|-- CardPayment
   PaymentFactory ..> Payment
+  AuthService --> User
+  CustomerService --> Customer
+  PackageService --> SafariPackage
+  VehicleService --> Vehicle
   BookingService --> Booking
   BookingService --> PackageService
   BookingService --> VehicleService
   BookingService --> JdbcBookingRepository
   BookingService --> JdbcPaymentRepository
+  Booking ..> SafariPackage : quote
+  Booking ..> Vehicle : quote
+  PaymentService --> JdbcBookingRepository
+  PaymentService --> JdbcPaymentRepository
   GuideController --> FileGuideRepository
   FileGuideRepository --> Guide
   ReviewService --> Review
@@ -62,4 +70,4 @@ classDiagram
   }
 ```
 
-The diagram can be rendered by Mermaid-capable Markdown viewers. SQL and file ownership are explained in [the technical overview](TECHNICAL_OVERVIEW.md).
+The diagram can be rendered by Mermaid-capable Markdown viewers. Customer ownership, booking/payment records, and guide assignments are linked through the repositories and SQL schema; guide details are handled by `FileGuideRepository` in `resources.txt`. Data ownership is explained in [the technical overview](TECHNICAL_OVERVIEW.md).
