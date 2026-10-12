@@ -170,7 +170,7 @@ export function ReviewForm({ defaultName }: { defaultName?: string }) {
   );
 }
 
-// ===================== My bookings =====================
+// Customer booking history and self-service changes.
 const STATUS_STYLE: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-800",
   CONFIRMED: "bg-emerald-100 text-emerald-800",
@@ -187,16 +187,31 @@ export function MyBookingsList({ initial }: { initial: BookingDetail[] }) {
   const [err, setErr] = useState("");
   const [edit, setEdit] = useState<BookingDetail | null>(null);
   const [busy, setBusy] = useState(false);
+
   const save = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!edit || busy) return; setBusy(true); setErr("");
-    try { const updated = await api<BookingDetail>(`/api/bookings/mine/${edit.id}`, "PUT", edit); setList(l => l.map(b => b.id === updated.id ? updated : b)); setEdit(null); } catch(e) { setErr((e as Error).message); } finally { setBusy(false); }
+    e.preventDefault();
+    if (!edit || busy) return;
+    setBusy(true);
+    setErr("");
+    try {
+      // The server verifies ownership, notice and price before accepting changes.
+      const updated = await api<BookingDetail>(`/api/bookings/mine/${edit.id}`, "PUT", edit);
+      setList((current) => current.map((booking) => booking.id === updated.id ? updated : booking));
+      setEdit(null);
+    } catch (error) {
+      setErr((error as Error).message);
+    } finally {
+      setBusy(false);
+    }
   };
+
   const cancel = async (id: number) => {
     if (!confirm("Cancel this booking? Any cash refund must be handled by staff.")) return;
     setErr("");
     try {
       const updated = await api<BookingDetail>("/api/bookings/mine", "POST", { id });
-      setList((l) => l.map((b) => (b.id === id ? updated : b)));
+      // Replace only the changed booking so the remaining history stays visible.
+      setList((current) => current.map((booking) => booking.id === id ? updated : booking));
     } catch (e) {
       setErr((e as Error).message);
     }
@@ -214,7 +229,39 @@ export function MyBookingsList({ initial }: { initial: BookingDetail[] }) {
   return (
     <div className="space-y-4">
       {err && <Alert kind="error">{err}</Alert>}
-      {edit && <form className="card grid gap-4 p-6 sm:grid-cols-2" onSubmit={save}><h2 className="font-display text-xl sm:col-span-2">Change booking {edit.reference}</h2><div><label htmlFor="edit-date" className="label">Safari date</label><input id="edit-date" type="date" className="input" required value={edit.safariDate} onChange={e => setEdit({ ...edit, safariDate: e.target.value })} /></div><div><label htmlFor="edit-slot" className="label">Departure time</label><input id="edit-slot" type="time" className="input" required value={edit.timeSlot} onChange={e => setEdit({ ...edit, timeSlot: e.target.value })} /></div><div><label htmlFor="edit-guests" className="label">Guests</label><input id="edit-guests" type="number" min={1} max={20} className="input" required value={edit.guests} onChange={e => setEdit({ ...edit, guests: Number(e.target.value) })} /></div><div><label htmlFor="edit-requests" className="label">Special requests</label><textarea id="edit-requests" className="input" maxLength={1000} value={edit.specialRequests ?? ""} onChange={e => setEdit({ ...edit, specialRequests: e.target.value })} /></div><p className="text-xs sm:col-span-2">Changes require 24 hours notice. Unpaid bookings are repriced; paid bookings must keep the same total.</p><div><button disabled={busy} className="btn-dark">Save changes</button><button type="button" className="ml-4 text-sm" onClick={() => setEdit(null)}>Close</button></div></form>}
+      {edit && (
+        <form className="card grid gap-4 p-6 sm:grid-cols-2" onSubmit={save}>
+          <h2 className="font-display text-xl sm:col-span-2">Change booking {edit.reference}</h2>
+          <div>
+            <label htmlFor="edit-date" className="label">Safari date</label>
+            <input id="edit-date" type="date" className="input" required value={edit.safariDate}
+              onChange={(e) => setEdit({ ...edit, safariDate: e.target.value })} />
+          </div>
+          <div>
+            <label htmlFor="edit-slot" className="label">Departure time</label>
+            <input id="edit-slot" type="time" className="input" required value={edit.timeSlot}
+              onChange={(e) => setEdit({ ...edit, timeSlot: e.target.value })} />
+          </div>
+          <div>
+            <label htmlFor="edit-guests" className="label">Guests</label>
+            <input id="edit-guests" type="number" min={1} max={20} className="input" required value={edit.guests}
+              onChange={(e) => setEdit({ ...edit, guests: Number(e.target.value) })} />
+          </div>
+          <div>
+            <label htmlFor="edit-requests" className="label">Special requests</label>
+            <textarea id="edit-requests" className="input" maxLength={1000}
+              value={edit.specialRequests ?? ""}
+              onChange={(e) => setEdit({ ...edit, specialRequests: e.target.value })} />
+          </div>
+          <p className="text-xs sm:col-span-2">
+            Changes require 24 hours notice. Unpaid bookings are repriced; paid bookings must keep the same total.
+          </p>
+          <div>
+            <button disabled={busy} className="btn-dark">Save changes</button>
+            <button type="button" className="ml-4 text-sm" onClick={() => setEdit(null)}>Close</button>
+          </div>
+        </form>
+      )}
       {list.map((b) => (
         <article key={b.id} className="card flex flex-col gap-5 p-6 md:flex-row md:items-center">
           <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-jungle-900 text-center text-gold">

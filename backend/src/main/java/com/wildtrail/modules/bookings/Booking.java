@@ -13,6 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * Booking rules shared by creation, changes and staff status updates.
+ * This class does not access the database; BookingService handles persistence.
+ */
 public final class Booking {
     // A completed or cancelled booking cannot move to another state.
     private static final Map<String, Set<String>> TRANSITIONS = Map.of(
@@ -31,6 +35,7 @@ public final class Booking {
     }
 
     public void transitionTo(String next) {
+        // A no-op status update is safe; every actual change follows TRANSITIONS.
         if (next.equals(this.status)) {
             return;
         }
@@ -41,6 +46,7 @@ public final class Booking {
     }
 
     public static Map<String, Double> quote(SafariPackage safariPackage, Vehicle vehicle, int guests) {
+        // The package and vehicle each calculate their own cost.
         if (!safariPackage.isBookable()) {
             throw ApiException.badRequest("This package is unavailable");
         }
@@ -54,6 +60,7 @@ public final class Booking {
     }
 
     public static List<String> slots(SafariPackage item) {
+        // Start with the package's advertised departure, then add type-specific choices.
         Set<String> slots = new TreeSet<>();
         slots.add(item.getStartTime());
         if (Set.of("EVENING", "FAMILY").contains(item.getType())) {
@@ -77,6 +84,7 @@ public final class Booking {
     }
 
     public static String validateDate(String rawDate) {
+        // Safari dates use Sri Lanka's calendar even when the server runs elsewhere.
         try {
             LocalDate date = LocalDate.parse(rawDate);
             if (!date.isAfter(LocalDate.now(ZoneId.of("Asia/Colombo")))) {

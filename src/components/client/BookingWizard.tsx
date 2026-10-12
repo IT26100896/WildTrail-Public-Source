@@ -16,7 +16,13 @@ const EVENING_SLOTS = ["14:00", "14:30"];
 
 function slotsFor(p?: PackageDTO) {
   if (!p) return [];
-  const base = p.type === "EVENING" || p.type === "FAMILY" ? EVENING_SLOTS : p.type === "PRIVATE" ? [...MORNING_SLOTS, ...EVENING_SLOTS] : MORNING_SLOTS;
+  // The package start time is always offered; extra departures depend on its type.
+  let base = MORNING_SLOTS;
+  if (p.type === "EVENING" || p.type === "FAMILY") {
+    base = EVENING_SLOTS;
+  } else if (p.type === "PRIVATE") {
+    base = [...MORNING_SLOTS, ...EVENING_SLOTS];
+  }
   return Array.from(new Set([p.startTime, ...base])).sort();
 }
 
@@ -29,6 +35,7 @@ interface Props {
 }
 
 export default function BookingWizard({ destinations, packages, vehicles, user, initial }: Props) {
+  // Search links can preselect a package, destination, date and guest count.
   const [tomorrow] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Colombo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 864e5)));
   const initPkg = packages.find((p) => p.id === initial.package);
   const initDest = initPkg?.destinationId ?? (destinations.some((d) => d.id === initial.destination) ? initial.destination : 0);
@@ -40,6 +47,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
   const [slot, setSlot] = useState(initPkg?.startTime ?? "");
   const [guests, setGuests] = useState(Math.max(1, Math.min(initial.guests, initPkg?.maxGuests ?? 8)));
   const [vehicleId, setVehicleId] = useState(0);
+  // Keep results tied to the exact choices that produced them.
   const availabilityKey = `${date}:${slot}:${pkgId}`;
   const [availability, setAvailability] = useState<{ key: string; ids: number[] } | null>(null);
   const freeIds = availability?.key === availabilityKey ? availability.ids : null;
@@ -60,7 +68,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
     [packages, destId, initial.type],
   );
 
-  // vehicle availability for chosen date/slot
+  // Ask the server which vehicles remain free for this departure.
   useEffect(() => {
     if (step !== 4 || !slot) return;
     let current = true;
@@ -70,7 +78,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
     return () => { current = false; };
   }, [step, date, slot, pkgId, availabilityKey]);
 
-  // live server-side quote (polymorphic pricing happens on the backend)
+  // The backend calculates the price; the browser only displays the returned quote.
   useEffect(() => {
     if (!pkgId || !vehicleId) return;
     let current = true;
@@ -81,12 +89,14 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
   }, [pkgId, vehicleId, guests, quoteKey]);
 
   const go = (n: number) => {
+    // Clear the previous step's error before moving to another part of the form.
     setErr("");
     setStep(n);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const next = () => {
+    // Validate the current step before allowing the customer to continue.
     if (step === 1 && !destId) return setErr("Please choose a destination");
     if (step === 2 && !pkgId) return setErr("Please choose a safari package");
     if (step === 3) {
@@ -102,6 +112,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
   };
 
   const confirm = async () => {
+    // The API checks all rules again before it stores booking and payment records.
     if (busy || !quote) return setErr("Please wait for a valid price quote before booking.");
     setErr("");
     setBusy(true);
@@ -119,7 +130,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
 
   return (
     <div>
-      {/* Progress indicator 01 → 07 */}
+      {/* Completed steps can be revisited; confirmation is the final step. */}
       <ol className="mb-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 print:hidden">
         {STEPS.map((s, i) => {
           const n = i + 1;
@@ -148,6 +159,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
           {err && <div className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">{err}</div>}
 
           {step === 1 && (
+            // Step 1: choose a park; changing it clears dependent choices.
             <Panel title="Choose your destination" sub="Where would you like to go on safari?">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {destinations.map((d) => (
@@ -167,6 +179,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
           )}
 
           {step === 2 && (
+            // Step 2: choose a package offered at the selected park.
             <Panel title="Choose a safari package" sub={`Experiences available at ${dest?.name ?? "this park"}`}>
               {destPackages.length === 0 && <p className="text-charcoal/60">No packages are currently offered here. Please choose another destination.</p>}
               <div className="space-y-4">
@@ -190,6 +203,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
           )}
 
           {step === 3 && pkg && (
+            // Step 3: choose the future departure and number of guests.
             <Panel title="Choose date & time" sub={`${pkg.name} · ${pkg.durationHours} hours`}>
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
@@ -218,6 +232,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
           )}
 
           {step === 4 && pkg && (
+            // Step 4: exclude unavailable or undersized vehicles.
             <Panel title="Choose your vehicle" sub={`Availability for ${fmtDate(date)} at ${fmtTime(slot)} · ${guests} guest(s)`}>
               {freeIds === null ? (
                 <p className="py-10 text-center text-charcoal/50">Checking availability…</p>
@@ -250,6 +265,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
           )}
 
           {step === 5 && (
+            // Step 5: collect contact details and optional requests.
             <Panel title="Your details" sub={user ? "Signed in — details pre-filled from your account." : "We'll send your confirmation here."}>
               {!user && <p className="mb-5 text-sm text-charcoal/60">Have an account? <Link className="font-semibold text-jungle-800 underline" href="/client/login?next=/client/booking">Sign in</Link> to see this booking under My Bookings.</p>}
               <div className="grid gap-4 sm:grid-cols-2">
@@ -263,6 +279,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
           )}
 
           {step === 6 && (
+            // Step 6: cash or a card-flow demonstration with no real charge.
             <Panel title="Payment method" sub="Choose how you'd like to pay">
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
@@ -344,6 +361,7 @@ function Row({ k, v }: { k: string; v?: string }) {
 }
 
 function Confirmation({ b }: { b: BookingDetail }) {
+  // The final screen displays the booking and payment state returned by the API.
   const paid = b.paymentStatus === "PAID";
   return (
     <div className="mx-auto max-w-3xl">

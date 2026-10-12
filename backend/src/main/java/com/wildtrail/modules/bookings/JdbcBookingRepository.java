@@ -8,6 +8,7 @@ import com.wildtrail.repository.JdbcInsert;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+/** SQL access for bookings; BookingService decides whether an operation is allowed. */
 @Repository
 public class JdbcBookingRepository {
     // Shared by the admin list, customer history and booking confirmation.
@@ -51,6 +52,7 @@ public class JdbcBookingRepository {
     }
 
     public Map<String, Object> basic(int id) {
+        // A compact row is enough for ownership and status checks.
         String sql = """
                 SELECT id, reference, customer_id AS "customerId", package_id AS "packageId",
                        vehicle_id AS "vehicleId", safari_date AS "safariDate",
@@ -87,6 +89,7 @@ public class JdbcBookingRepository {
     }
 
     public int create(Map<String, Object> values) {
+        // Prepared placeholders keep request values separate from SQL text.
         String sql = """
                 INSERT INTO bookings(reference, customer_id, package_id, vehicle_id,
                                      safari_date, time_slot, guests, special_requests,
@@ -110,12 +113,14 @@ public class JdbcBookingRepository {
     }
 
     public Map<String, Object> lockBooking(int id) {
+        // The caller must be inside a transaction for this row lock to remain held.
         List<Map<String, Object>> rows = jdbc.queryForList(
                 "SELECT id FROM bookings WHERE id=? FOR UPDATE", id);
         return rows.isEmpty() ? null : basic(id);
     }
 
     public boolean overlaps(int vehicleId, LocalDate date, String slot, int durationHours, int excludedId) {
+        // Compare full time ranges, not only matching start times.
         int start = LocalTime.parse(slot).toSecondOfDay();
         int end = start + durationHours * 3600;
         String sql = """
@@ -136,6 +141,7 @@ public class JdbcBookingRepository {
     }
 
     public void edit(int id, LocalDate date, String slot, int guests, String requests, double total) {
+        // Keep a previously assigned guide from being double-booked on the new date.
         String guideConflictSql = """
                 SELECT COUNT(*) FROM booking_guide_assignments mine
                 JOIN booking_guide_assignments other ON other.guide_id = mine.guide_id
@@ -155,6 +161,7 @@ public class JdbcBookingRepository {
                     total_amount = ?, updated_at = NOW()
                 WHERE id = ?
                 """, date, slot, guests, requests, total, id);
+        // Pending payment follows the revised quote in the same transaction.
         jdbc.update("""
                 UPDATE payments SET amount = ?
                 WHERE booking_id = ? AND status = 'PENDING'

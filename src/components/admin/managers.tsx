@@ -328,8 +328,13 @@ export function CustomersManager({ initial }: { initial: CustomerItem[] }) {
   );
 }
 
-// ================================================================ Bookings
-const NEXT_STATUS: Record<string, string[]> = { PENDING: ["CONFIRMED", "CANCELLED"], CONFIRMED: ["COMPLETED", "CANCELLED"], COMPLETED: [], CANCELLED: [] };
+// Staff may offer only the status changes allowed by the booking lifecycle.
+const NEXT_STATUS: Record<string, string[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["COMPLETED", "CANCELLED"],
+  COMPLETED: [],
+  CANCELLED: [],
+};
 
 export function BookingsManager({ initial }: { initial: BookingDetail[] }) {
   const [list, setList] = useState(initial);
@@ -337,12 +342,14 @@ export function BookingsManager({ initial }: { initial: BookingDetail[] }) {
   const [status, setStatus] = useState("");
   const [view, setView] = useState<BookingDetail | null>(null);
   const toast = useToast();
+  // Filter the current list locally; mutations reload the authoritative server rows.
   const rows = useMemo(
     () => list.filter((b) => (!status || b.status === status) && `${b.reference} ${b.customerName} ${b.packageName} ${b.destinationName}`.toLowerCase().includes(q.toLowerCase())),
     [list, q, status],
   );
   const reload = async () => setList(await api<BookingDetail[]>("/api/bookings"));
   const change = async (b: BookingDetail, s: string) => {
+    // The backend also validates transitions and payment requirements.
     try {
       await api(`/api/bookings/${b.id}`, "PATCH", { status: s });
       await reload();
@@ -352,6 +359,7 @@ export function BookingsManager({ initial }: { initial: BookingDetail[] }) {
     }
   };
   const del = async (b: BookingDetail) => {
+    // Deletion succeeds only after the backend's cancellation and refund checks.
     if (!confirm(`Delete booking ${b.reference}?`)) return;
     try {
       await api(`/api/bookings/${b.id}`, "DELETE");
