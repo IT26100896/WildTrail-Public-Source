@@ -43,7 +43,7 @@ Submit -> read -> own edit -> admin moderation -> delete; explain real reviews v
 
 ## Persistence and file handling
 
-This app uses H2 SQL for most entities. Guides use real `resources.txt` file CRUD. Other modules can demonstrate Save/Read text snapshots at `/admin/files`; those snapshots are not the primary database. Do not claim that every module stores records only in `.txt` files.
+H2 SQL stores reviews and most other entities. Guide records use `resources.txt` file CRUD. The `/admin/files` page saves and reads text snapshots of SQL-backed modules.
 
 ## GitHub Desktop
 

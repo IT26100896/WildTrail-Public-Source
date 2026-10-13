@@ -21,6 +21,7 @@ export default function QuickBooking({ destinations }: { destinations: Destinati
   const [f, setF] = useState({ destination: "", date: tomorrow, type: "", guests: "2" });
 
   const submit = (e: React.FormEvent) => {
+    // Carry the selected filters to the full booking wizard.
     e.preventDefault();
     const q = new URLSearchParams(Object.entries(f).filter(([, v]) => v));
     router.push(`/client/booking?${q.toString()}`);

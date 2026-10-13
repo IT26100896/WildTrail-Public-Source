@@ -142,7 +142,7 @@ Shared files can contain functions from several modules. Ownership follows the f
 | [`scripts/`](../scripts/) | Local setup and start commands. `.local/` credentials and `backend/data/` databases are ignored by Git. |
 | [`backend/src/test/`](../backend/src/test/) | Java tests for domain, API, repository, booking, payment, security, and other rules. |
 | [`qa/`](../qa/) | Browser, authentication/navigation, and responsive checks. Browser QA mutates only a disposable database. |
-| [`docs/`](./) | Final report, class diagram, QA evidence, presentation, and viva notes. |
+| [`docs/`](./) | Final report, class diagram, QA evidence, and viva notes. |
 
 ## Cross-module dependencies to explain in the viva
 

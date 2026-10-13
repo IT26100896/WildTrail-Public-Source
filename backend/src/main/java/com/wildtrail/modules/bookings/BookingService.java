@@ -4,6 +4,8 @@ import com.wildtrail.exception.ApiException;
 import com.wildtrail.modules.payments.Payment;
 import com.wildtrail.modules.payments.PaymentFactory;
 import com.wildtrail.modules.payments.PaymentResult;
+import com.wildtrail.modules.payments.JdbcPaymentRepository;
+import com.wildtrail.modules.resources.VehicleService;
 import com.wildtrail.modules.safaris.SafariPackage;
 import com.wildtrail.modules.resources.Vehicle;
 import com.wildtrail.modules.users.JdbcCustomerRepository;
@@ -20,35 +22,38 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Coordinates booking rules with customer, package, vehicle and payment data. */
 @Service
 public class BookingService {
     private static final List<String> PAYMENT_STATUSES = List.of("PENDING", "PAID", "REFUNDED", "FAILED");
     private final JdbcBookingRepository bookings;
-    private final JdbcCustomerRepository people;
-    private final PackageService catalog;
-    private final com.wildtrail.modules.resources.VehicleService vehicles;
-    private final com.wildtrail.modules.payments.JdbcPaymentRepository payments;
+    private final JdbcCustomerRepository customers;
+    private final PackageService packages;
+    private final VehicleService vehicles;
+    private final JdbcPaymentRepository payments;
 
     public BookingService(JdbcBookingRepository bookings,
-                          JdbcCustomerRepository people,
-                          PackageService catalog,
-                          com.wildtrail.modules.resources.VehicleService vehicles,
-                          com.wildtrail.modules.payments.JdbcPaymentRepository payments) {
+                          JdbcCustomerRepository customers,
+                          PackageService packages,
+                          VehicleService vehicles,
+                          JdbcPaymentRepository payments) {
         this.bookings = bookings;
-        this.people = people;
-        this.catalog = catalog;
+        this.customers = customers;
+        this.packages = packages;
         this.vehicles = vehicles;
         this.payments = payments;
     }
 
     public Map<String, Double> quote(int packageId, int vehicleId, int guests) {
-        SafariPackage safariPackage = this.catalog.requirePackage(packageId);
+        // Reuse the same domain pricing rule that creation and editing use.
+        SafariPackage safariPackage = this.packages.requirePackage(packageId);
         Vehicle vehicle = this.vehicles.requireVehicle(vehicleId);
         safariPackage.validateGuests(guests);
         return Booking.quote(safariPackage, vehicle, guests);
     }
 
     public List<Integer> availableVehicleIds(String dateText, String slot, Integer packageId) {
+        // The selected package supplies the trip length used by overlap checks.
         LocalDate date = LocalDate.parse(Booking.validateDate(dateText));
         if (slot == null || slot.isBlank()) {
             throw ApiException.badRequest("date and slot are required");
@@ -60,7 +65,7 @@ public class BookingService {
         }
         int hours = 24;
         if (packageId != null) {
-            SafariPackage item = catalog.requirePackage(packageId);
+            SafariPackage item = packages.requirePackage(packageId);
             if (!item.isBookable()) {
                 throw ApiException.badRequest("This package is not currently bookable");
             }
@@ -76,6 +81,7 @@ public class BookingService {
 
     @Transactional
     public Map<String, Object> create(Map<String, Object> body, SessionUser user) {
+        // Validate the requested safari and reserve a vehicle before writing records.
         int customerId;
         Map<String, Object> customer;
         int packageId = RequestValues.integer(body, "packageId", 1, Integer.MAX_VALUE);
@@ -83,7 +89,7 @@ public class BookingService {
         int guests = RequestValues.integer(body, "guests", 1, 20);
         String safariDateText = RequestValues.text(body, "safariDate", 10);
         String safariDate = Booking.validateDate(safariDateText);
-        SafariPackage safariPackage = this.catalog.requirePackage(packageId);
+        SafariPackage safariPackage = this.packages.requirePackage(packageId);
         Vehicle vehicle = this.vehicles.requireVehicle(vehicleId);
         String slot = RequestValues.optionalText(body, "timeSlot");
         if (slot.isBlank()) {
@@ -103,6 +109,7 @@ public class BookingService {
             throw ApiException.conflict(vehicle.getName() + " is already booked for "
                     + safariDate + " at " + slot + ". Please choose another vehicle.");
         }
+        // The vehicle lock keeps a concurrent request from taking the same time range.
         Map<String, Double> quote = Booking.quote(safariPackage, vehicle, guests);
         String method = RequestValues.text(body, "paymentMethod", 10);
         if (!method.equals("CASH")
@@ -121,13 +128,14 @@ public class BookingService {
         if (!email.equalsIgnoreCase(user.email())) {
             throw ApiException.forbidden("Booking email must match your account");
         }
-        customer = this.people.customerByUser(user.uid());
+        // Associate the booking with the signed-in customer's record.
+        customer = this.customers.customerByUser(user.uid());
         if (customer == null) {
-            customerId = this.people.createGuestCustomer(
+            customerId = this.customers.createGuestCustomer(
                     name, email, phone, country, Integer.valueOf(user.uid()));
         } else {
             customerId = ((Number)customer.get("id")).intValue();
-            this.people.updateCustomerContact(customerId, phone, country);
+            this.customers.updateCustomerContact(customerId, phone, country);
         }
         String status = "PAID".equals(result.status()) ? "CONFIRMED" : "PENDING";
         LinkedHashMap<String, Object> values = new LinkedHashMap<String, Object>();
@@ -145,6 +153,7 @@ public class BookingService {
         values.put("specialRequests", requests);
         values.put("totalAmount", quote.get("total"));
         values.put("status", status);
+        // Booking and payment records commit together because this method is transactional.
         int bookingId = this.bookings.create(values);
         this.payments.createPayment(
                 bookingId, result.method(), result.amount(), result.status(),
@@ -157,7 +166,7 @@ public class BookingService {
     }
 
     public List<Map<String, Object>> mine(int userId) {
-        Map<String, Object> customer = this.people.customerByUser(userId);
+        Map<String, Object> customer = this.customers.customerByUser(userId);
         if (customer == null) {
             return List.of();
         }
@@ -166,11 +175,12 @@ public class BookingService {
 
     @Transactional
     public Map<String, Object> cancelMine(int id, int userId) {
+        // Lock first, then verify ownership, active status and departure notice.
         Map<String, Object> row = this.bookings.lockBooking(id);
         if (row == null) {
             throw ApiException.notFound("Booking with id " + id + " was not found");
         }
-        Map<String, Object> customer = this.people.customerByUser(userId);
+        Map<String, Object> customer = this.customers.customerByUser(userId);
         if (customer == null || ((Number)row.get("customerId")).intValue() != ((Number)customer.get("id")).intValue()) {
             throw ApiException.forbidden("This booking does not belong to you");
         }
@@ -191,6 +201,7 @@ public class BookingService {
 
     @Transactional
     public Map<String, Object> updateStatus(int id, String next) {
+        // Staff transitions are checked by Booking; completing also requires a paid past safari.
         Map<String, Object> payment;
         Map<String, Object> row = this.bookings.lockBooking(id);
         if (row == null) {
@@ -225,6 +236,7 @@ public class BookingService {
 
     @Transactional
     public void delete(int id) {
+        // Preserve an active booking or a paid booking awaiting refund.
         Map<String, Object> row = bookings.lockBooking(id);
         if (row == null) {
             throw ApiException.notFound("Booking was not found");
@@ -249,7 +261,7 @@ public class BookingService {
         if (row == null) {
             throw ApiException.notFound("Booking was not found");
         }
-        Map<String, Object> customer = people.customerByUser(userId);
+        Map<String, Object> customer = customers.customerByUser(userId);
         if (customer == null || !row.get("customerId").equals(customer.get("id"))) {
             throw ApiException.forbidden("This booking does not belong to you");
         }
@@ -257,7 +269,7 @@ public class BookingService {
             throw ApiException.conflict("Only active bookings can be changed");
         }
 
-        SafariPackage item = catalog.requirePackage(((Number) row.get("packageId")).intValue());
+        SafariPackage item = packages.requirePackage(((Number) row.get("packageId")).intValue());
         int vehicleId = ((Number) row.get("vehicleId")).intValue();
         Instant now = Instant.now();
         // Both the original and requested departures need at least 24 hours notice.
@@ -270,6 +282,7 @@ public class BookingService {
         int guests = RequestValues.integer(body, "guests", 1, 20);
         bookings.lockVehicle(vehicleId);
         Vehicle vehicle = vehicles.requireVehicle(vehicleId);
+        // A paid booking can move only if the new quote keeps the same total.
         double total = Booking.quote(item, vehicle, guests).get("total");
         Map<String, Object> payment = payments.paymentForBooking(id);
         if (payment != null && "PAID".equals(payment.get("status"))
@@ -289,6 +302,7 @@ public class BookingService {
     }
 
     private Map<String, Object> detailedByReference(String reference) {
+        // Return the joined detail row expected by both customer and admin pages.
         return this.bookings.byReference(reference).stream()
                 .findFirst()
                 .orElseThrow(() -> ApiException.notFound(

@@ -54,6 +54,7 @@ export function WhyChoose() {
 }
 
 export function HowItWorks() {
+  // The booking steps link to the full wizard, where each choice is validated.
   return (
     <section className="bg-cream/60 py-24">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">

@@ -117,7 +117,7 @@ flowchart LR
 | **05 · Lakshani · IT26100900** | [Payment](backend/src/main/java/com/wildtrail/modules/payments/Payment.java), [PaymentProcessor](backend/src/main/java/com/wildtrail/modules/payments/PaymentProcessor.java), [PaymentService](backend/src/main/java/com/wildtrail/modules/payments/PaymentService.java), [ReceiptController](backend/src/main/java/com/wildtrail/modules/payments/ReceiptController.java) | [Booking payment step](src/components/client/BookingWizard.tsx), [receipt](src/app/client/receipts/%5Bid%5D/page.tsx), [staff payments](src/app/admin/%28panel%29/payments/page.tsx) |
 | **06 · Gamage · IT26100901** | [Review](backend/src/main/java/com/wildtrail/modules/reviews/Review.java), [VerifiedReview](backend/src/main/java/com/wildtrail/modules/reviews/VerifiedReview.java), [ReviewService](backend/src/main/java/com/wildtrail/modules/reviews/ReviewService.java), [ReviewController](backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java) | [Reviews](src/app/client/reviews/page.tsx), [my reviews](src/app/client/my-reviews/page.tsx), [contact](src/app/client/contact/page.tsx), [staff moderation](src/app/admin/%28panel%29/reviews/page.tsx) |
 
-Each row is an ownership guide, not a claim that one person wrote every line in a shared file. The [complete project map](docs/SYSTEM_MAP.md) lists all Java classes, web routes, shared components, data stores, and cross-module dependencies. The [single integrated class diagram](docs/CLASS_DIAGRAM.md) shows how the six components work together. [Presentation](docs/WildTrail-Integrated-Presentation.pptx) · [PDF copy](docs/WildTrail-Integrated-Presentation.pdf).
+The [complete project map](docs/SYSTEM_MAP.md) links Java classes, web routes, shared components, data stores, and cross-module dependencies. The [integrated class diagram](docs/CLASS_DIAGRAM.md) shows how the six components work together.
 
 ## Project layout
 
@@ -155,7 +155,7 @@ WildTrail-Public-Source/
 ├── database/                       SQL schema and sample catalogue data
 ├── scripts/                        Local setup, startup, and optional sharing
 ├── qa/                             Repeatable browser QA scripts
-├── docs/                           Class map, reports, QA, and presentation
+├── docs/                           Class map, reports, QA, and viva notes
 └── team/                           Six member-specific source and viva guides
 ```
 
@@ -193,10 +193,9 @@ Each member should understand their module, test their changes, and commit from 
 | [GitHub workflow](docs/GITHUB_WORKFLOW.md) | Clone, branch, commit, push, and pull-request steps |
 | [Viva guide](docs/VIVA_GUIDE.md) | Demonstration flow and OOP explanations |
 | [QA report](docs/QA_REPORT.md) | Test scope, evidence, and limits |
-| [Final report](docs/FINAL_REPORT.md) · [PDF](docs/FINAL_REPORT.pdf) | Project design, implementation, validation, and individual Git evidence |
+| [Final report](docs/FINAL_REPORT.md) | Project design, implementation, validation, and individual Git evidence |
 | [Class diagram](docs/CLASS_DIAGRAM.md) | Domain relationships |
 | [Complete project map](docs/SYSTEM_MAP.md) | Every Java package, website area, owner, and cross-module link |
-| [Integrated presentation](docs/WildTrail-Integrated-Presentation.pptx) · [PDF](docs/WildTrail-Integrated-Presentation.pdf) | Whole-system overview, one class map, viva answers, and live demonstration |
 | [Technical overview](docs/TECHNICAL_OVERVIEW.md) | Architecture, persistence, business rules, and scope |
 | [Local public sharing](docs/PUBLIC_SHARING.md) | Optional temporary Cloudflare Quick Tunnel instructions |
 

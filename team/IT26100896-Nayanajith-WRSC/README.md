@@ -23,7 +23,7 @@ Availability, date/time, guest count, booking status, customer change/cancellati
 3. **Booking.java** contains the small domain rules: valid status changes, price quote, departure slots, future dates, and 24-hour notice.
 4. **JdbcBookingRepository.java** reads and writes booking rows. The SQL is split into readable blocks; `?` marks values supplied separately to the query.
 
-For a new booking, follow **Controller → Service → Booking rules → Repository**. For a change or cancellation, the service first locks and checks the existing booking, then updates it through the repository. `@Transactional` keeps related database changes together if a step fails. In Java, `i++` means increment `i` by one; the equivalent assignment is `i = i + 1`, not `i + 1 = i`.
+For a new booking, follow **Controller → Service → Booking rules → Repository**. For a change or cancellation, the service first locks and checks the existing booking, then updates it through the repository. `@Transactional` keeps related database changes together if a step fails.
 
 ## UI files
 
@@ -47,7 +47,7 @@ Create -> history -> change guests/date -> cancel eligible booking; explain 24-h
 
 ## Persistence and file handling
 
-This app uses H2 SQL for most entities. Guides use real `resources.txt` file CRUD. Other modules can demonstrate Save/Read text snapshots at `/admin/files`; those snapshots are not the primary database. Do not claim that every module stores records only in `.txt` files.
+H2 SQL stores bookings and most other entities. Guide records use `resources.txt` file CRUD. The `/admin/files` page saves and reads text snapshots of SQL-backed modules.
 
 ## GitHub Desktop
 

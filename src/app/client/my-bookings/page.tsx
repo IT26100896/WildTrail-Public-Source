@@ -10,6 +10,7 @@ import { IMG } from "@/lib/content";
 export const metadata = { title: "My Bookings — WildTrail" };
 
 export default async function MyBookingsPage() {
+  // The backend returns only bookings owned by this signed-in customer.
   const me = await getCustomerSession();
   if (!me) redirect("/client/login?next=/client/my-bookings");
   const bookings = await backendApi<BookingDetail[]>("/api/bookings/mine");

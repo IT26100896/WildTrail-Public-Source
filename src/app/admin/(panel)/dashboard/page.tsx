@@ -5,8 +5,10 @@ import type { DashboardStats } from "@/types/domain";
 import { fmtDate, fmtTime, money } from "@/lib/content";
 
 export default async function DashboardPage() {
+  // Fetch one dashboard snapshot so the counts and recent rows match.
   const s = await backendApi<DashboardStats>("/api/admin/dashboard");
   const maxRev = Math.max(1, ...s.revenueByPackage.map((r) => r.total));
+  // A minimum of one avoids division by zero when no records exist yet.
   const totalStatus = Math.max(1, Object.values(s.statusBreakdown).reduce((a, b) => a + b, 0));
   const statusColor: Record<string, string> = { PENDING: "bg-amber-400", CONFIRMED: "bg-emerald-500", COMPLETED: "bg-sky-500", CANCELLED: "bg-red-400" };
 

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/** Maps HTTP booking requests to BookingService; business rules stay in the service. */
 @RestController
 @RequestMapping("/api")
 public class BookingController {
@@ -34,12 +35,14 @@ public class BookingController {
     @GetMapping(value={"/bookings"})
     @PreAuthorize(value="hasRole('ADMIN')")
     public List<Map<String, Object>> all() {
+        // Staff view: includes customer, package, vehicle and payment details.
         return this.bookings.all();
     }
 
     @PostMapping(value={"/bookings"})
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Map<String, Object>> create(@RequestBody Map<String, Object> body, Authentication authentication) {
+        // Pass the signed-in customer to the service so it can check ownership.
         SessionUser user = null;
         if (authentication != null && authentication.getPrincipal() instanceof SessionUser sessionUser) {
             user = sessionUser;
@@ -56,6 +59,7 @@ public class BookingController {
     @PostMapping(value={"/bookings/mine"})
     @PreAuthorize(value="hasRole('CUSTOMER')")
     public Map<String, Object> cancelMine(@RequestBody Map<String, Object> body, Authentication authentication) {
+        // The existing client sends the booking ID in a POST body.
         Object id = body.get("id");
         try {
             int bookingId = Integer.parseInt(id.toString());
@@ -80,6 +84,7 @@ public class BookingController {
                                 @RequestParam(required = false) String availability,
                                 @RequestParam(required = false) String date,
                                 @RequestParam(required = false) String slot) {
+        // One endpoint serves availability checks and price quotes.
         if ("1".equals(availability)) {
             if (date == null || slot == null) {
                 throw ApiException.badRequest("date and slot are required");
@@ -127,6 +132,7 @@ public class BookingController {
     public Map<String, Object> editMine(@PathVariable int id,
                                         @RequestBody Map<String, Object> body,
                                         Authentication authentication) {
+        // A customer may change only a booking owned by that account.
         int userId = ((SessionUser) authentication.getPrincipal()).uid();
         return bookings.editMine(id, userId, body);
     }

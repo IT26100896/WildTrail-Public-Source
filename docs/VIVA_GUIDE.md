@@ -22,7 +22,7 @@
 
 ## Answer accurately
 
-`resources.txt` handles real file CRUD; `reports/*.txt` demonstrate snapshots for the SQL modules. Do not say all bookings are stored only in bookings.txt. Do not call cash pending a collected payment. Do not claim any online gateway, outbound email or actual business identity. Guide licence data is recorded, not verified against a government service.
+`resources.txt` handles guide file CRUD; `reports/*.txt` contains snapshots for SQL-backed modules. Bookings are stored in H2. Cash bookings remain pending until staff record payment. Card checkout is a campus demonstration and does not charge money. The app does not send outbound email or verify guide licences against a government service.
 
 Explain why history-bearing customers/used packages/vehicles/guides and paid records cannot be casually deleted. Explain terminal booking states, Colombo date/time and error/status codes. Be ready to show source and tests; names of the four OOP concepts alone are insufficient.
 

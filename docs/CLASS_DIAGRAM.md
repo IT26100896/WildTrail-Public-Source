@@ -1,6 +1,6 @@
 # One integrated class diagram
 
-This view connects the six business components in one system. It shows the principal implemented model inheritance and service/repository dependencies; the [complete project map](SYSTEM_MAP.md) links every Java class and website page. The `BookingService` dependencies illustrate why package, resource, and payment changes need cross-module review.
+This view connects the six business components in one system. It shows the principal implemented model inheritance and service/repository dependencies; the [complete project map](SYSTEM_MAP.md) links every Java class and website page. The `BookingService` dependencies show why package, resource, and payment changes need cross-module review.
 
 ```mermaid
 classDiagram
@@ -14,9 +14,9 @@ classDiagram
   SafariPackage <|-- FamilySafari
   SafariPackage <|-- PhotographySafari
   Vehicle <|-- SafariJeep
-  Vehicle <|-- HiluxSafariJeep
+  SafariJeep <|-- HiluxSafariJeep
   Vehicle <|-- LuxuryJeep
-  Vehicle <|-- FamilySafariJeep
+  SafariJeep <|-- FamilySafariJeep
   Guide <|-- NaturalistGuide
   Review <|-- VerifiedReview
   PaymentProcessor <|.. Payment

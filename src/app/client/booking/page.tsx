@@ -11,15 +11,16 @@ export const metadata = { title: "Book a Safari — WildTrail" };
 export default async function BookingPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const session = await getCustomerSession();
+  // Return unauthenticated customers to the same booking choices after sign-in.
   if (!session) {
     const query = new URLSearchParams(Object.entries(sp).filter((entry): entry is [string, string] => typeof entry[1] === "string")).toString();
     redirect(`/client/login?next=${encodeURIComponent(`/client/booking${query ? `?${query}` : ""}`)}`);
   }
-  const [destinations, packages, vehicles, me] = await Promise.all([
+  // Load the catalogue before the interactive wizard runs in the browser.
+  const [destinations, packages, vehicles] = await Promise.all([
     backendApi<DestinationDTO[]>("/api/destinations"),
     backendApi<PackageDTO[]>("/api/packages"),
     backendApi<VehicleDTO[]>("/api/vehicles"),
-    getCustomerSession(),
   ]);
   return (
     <div className="bg-ivory pt-28 pb-24">
@@ -32,7 +33,7 @@ export default async function BookingPage({ searchParams }: { searchParams: Prom
           destinations={destinations}
           packages={packages}
           vehicles={vehicles}
-          user={me ? { name: me.name, email: me.email } : null}
+          user={{ name: session.name, email: session.email }}
           initial={{
             destination: Number(sp.destination) || 0,
             package: Number(sp.package) || 0,
