@@ -1,11 +1,13 @@
 import { PageHero } from "@/components/client/ClientShell";
 import { ContactForm } from "@/components/client/forms";
 import { FaqSection } from "@/components/client/sections";
+import { getWebsiteSession } from "@/lib/session";
 import { IMG } from "@/lib/content";
 
 export const metadata = { title: "Contact — WildTrail" };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const user = await getWebsiteSession();
   return (
     <>
       <PageHero eyebrow="Contact" title="Let's plan your safari" text="Questions about parks, timings or private tours? Our team answers every message personally." image={IMG.lagoon} />
@@ -16,7 +18,7 @@ export default function ContactPage() {
         <div className="reveal card p-8 md:p-10">
           <p className="eyebrow">Send a message</p>
           <h2 className="mt-2 mb-6 font-display text-3xl font-semibold text-jungle-950">Contact our safari team</h2>
-          <ContactForm />
+          <ContactForm user={user ? { name: user.name, email: user.email } : undefined} />
         </div>
       </section>
       <div className="bg-cream/50"><FaqSection /></div>

@@ -31,6 +31,7 @@ classDiagram
   BookingService --> PackageService
   BookingService --> VehicleService
   BookingService --> JdbcBookingRepository
+  BookingService --> JdbcCustomerRepository
   BookingService --> JdbcPaymentRepository
   Booking ..> SafariPackage : quote
   Booking ..> Vehicle : quote
@@ -40,6 +41,10 @@ classDiagram
   FileGuideRepository --> Guide
   ReviewService --> Review
   ReviewService --> JdbcReviewRepository
+  ReviewService --> JdbcCustomerRepository
+  ReviewController --> ReviewService : publication and staff replies
+  MyReviewsController --> ReviewService : own history and deletion
+  ProfileController --> JdbcCustomerRepository
   class SafariPackage {
     <<abstract>>
     -double basePrice

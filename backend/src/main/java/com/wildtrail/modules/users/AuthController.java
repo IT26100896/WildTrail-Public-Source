@@ -37,6 +37,7 @@ public class AuthController {
 
     private Map<String, Object> begin(User user, HttpServletResponse response) {
         this.sessions.start(response, user);
+        this.sessions.end(response, "ROLE_ADMIN".equals(user.getRole()) ? "ROLE_CUSTOMER" : "ROLE_ADMIN");
         return Map.of("ok", true, "name", user.getFullName(), "redirect", user.getHomePath());
     }
 

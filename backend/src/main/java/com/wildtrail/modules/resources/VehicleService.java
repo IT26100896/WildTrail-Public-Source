@@ -37,6 +37,12 @@ public class VehicleService {
         if (!this.catalog.lockVehicle(id)) {
             throw ApiException.notFound("Vehicle with id " + id + " was not found");
         }
+        // Older clients omit this optional field; retain the recorded plate in that case.
+        if (!body.containsKey("registrationNumber")) {
+            this.catalog.vehicles(false).stream()
+                    .filter(row -> ((Number)row.get("id")).intValue() == id)
+                    .findFirst().ifPresent(row -> values.put("registrationNumber", row.get("registrationNumber")));
+        }
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Colombo"));
         if (this.catalog.hasIncompatibleActiveBooking(
                 id, (int) values.get("capacity"), (boolean) values.get("available"), today)) {
@@ -69,6 +75,11 @@ public class VehicleService {
         }
         LinkedHashMap<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("name", RequestValues.text(body, "name", 120));
+        String number = RequestValues.optionalText(body, "registrationNumber").toUpperCase(java.util.Locale.ROOT);
+        if (number.length() > 32 || (!number.isBlank() && !number.matches("[A-Z0-9 -]+"))) {
+            throw ApiException.badRequest("Vehicle number must contain letters, numbers, spaces or hyphens (max 32 characters)");
+        }
+        result.put("registrationNumber", number.isBlank() ? null : number);
         result.put("category", category);
         result.put("capacity", RequestValues.integer(body, "capacity", 1, 20));
         result.put("fourByFour", RequestValues.bool(body, "fourByFour", true));

@@ -26,6 +26,9 @@ Cash collection, campus-only demo card state, receipts and text file reports bel
 
 ## UI files
 
+- [Personal payment history](../../src/app/client/payments/page.tsx)
+- [Shared payment summary and date formatting](../../src/components/client/PaymentSummary.tsx)
+
 - [`src/app/admin/(panel)/payments/page.tsx`](../../src/app/admin/%28panel%29/payments/page.tsx)
 - [`src/app/admin/(panel)/files/page.tsx`](../../src/app/admin/%28panel%29/files/page.tsx)
 - [`src/app/client/receipts/[id]/page.tsx`](../../src/app/client/receipts/%5Bid%5D/page.tsx)

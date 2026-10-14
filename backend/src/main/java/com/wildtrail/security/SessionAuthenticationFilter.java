@@ -27,16 +27,16 @@ extends OncePerRequestFilter {
     }
 
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        boolean customerRoute = request.getRequestURI().startsWith("/api/profile") || request.getRequestURI().contains("/mine") || (request.getMethod().equals("POST") && java.util.Set.of("/api/bookings", "/api/reviews").contains(request.getRequestURI()));
-        SessionUser user = this.cookies.read(request, customerRoute ? "ROLE_CUSTOMER" : "ROLE_ADMIN");
-        if (user == null) {
-            user = this.cookies.read(request, "ROLE_CUSTOMER");
-        }
-        var rows=user==null ? java.util.List.<java.util.Map<String,Object>>of() : jdbc.queryForList("SELECT email,full_name AS \"name\" FROM users WHERE id=? AND role=?",user.uid(),user.role());
-        if (user != null && !rows.isEmpty()) {
-            user=new SessionUser(user.uid(),rows.get(0).get("email").toString(),rows.get(0).get("name").toString(),user.role());
+        // Use one consistent identity across the website and admin console.
+        for (String role : List.of("ROLE_ADMIN", "ROLE_CUSTOMER")) {
+            SessionUser user = this.cookies.read(request, role);
+            if (user == null) continue;
+            var rows = jdbc.queryForList("SELECT email,full_name AS \"name\" FROM users WHERE id=? AND role=?", user.uid(), role);
+            if (rows.isEmpty()) continue;
+            user=new SessionUser(user.uid(),rows.get(0).get("email").toString(),rows.get(0).get("name").toString(),role);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken((Object)user, null, List.of(new SimpleGrantedAuthority(user.role())));
             SecurityContextHolder.getContext().setAuthentication((Authentication)authentication);
+            break;
         }
         chain.doFilter((ServletRequest)request, (ServletResponse)response);
     }

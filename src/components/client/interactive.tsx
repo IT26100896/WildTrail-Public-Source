@@ -53,12 +53,13 @@ export function Gallery({ items }: { items: { src: string; title: string; tall?:
 }
 
 // ===================== Review carousel =====================
-export interface ReviewItem { id: number; authorName: string; country: string | null; rating: number; comment: string; createdAt: string; sample?: boolean }
+export type ReviewItem = Omit<import("@/types/domain").ReviewRow, "reviewType">;
 
 export function ReviewCarousel({ reviews }: { reviews: ReviewItem[] }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const n = reviews.length;
+  const current = n ? i % n : 0;
   useEffect(() => {
     if (paused || n < 2) return;
     const t = setInterval(() => setI((x) => (x + 1) % n), 6000);
@@ -69,7 +70,7 @@ export function ReviewCarousel({ reviews }: { reviews: ReviewItem[] }) {
   return (
     <div className="relative mx-auto max-w-4xl" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <div className="overflow-hidden">
-        <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
+        <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${current * 100}%)` }}>
           {reviews.map((r) => (
             <figure key={r.id} className="w-full shrink-0 px-2 text-center">
               <div className="font-display text-7xl leading-none text-gold/40">&ldquo;</div>
@@ -79,6 +80,7 @@ export function ReviewCarousel({ reviews }: { reviews: ReviewItem[] }) {
                   {r.authorName.split(" ").map((s) => s[0]).join("").slice(0, 2)}
                 </span>
                 <span className="text-sm font-semibold text-white">{r.authorName}</span>
+                {r.authorRole === "ROLE_ADMIN" && <span className="text-xs text-gold">Administrator</span>}
                 {r.sample && <span className="rounded-full border border-gold/40 px-3 py-1 text-xs text-gold">Fictional sample — campus demonstration</span>}
                 <span className="text-xs text-white/50">{r.country ?? "Traveller"} · {fmtDate(r.createdAt)}</span>
                 <span className="text-gold">{"★".repeat(r.rating)}<span className="text-white/20">{"★".repeat(5 - r.rating)}</span></span>
@@ -90,7 +92,7 @@ export function ReviewCarousel({ reviews }: { reviews: ReviewItem[] }) {
       <div className="mt-8 flex items-center justify-center gap-4">
         <button onClick={() => setI((i - 1 + n) % n)} className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-white hover:border-gold hover:text-gold" aria-label="Previous review">‹</button>
         {reviews.map((r, k) => (
-          <button key={r.id} onClick={() => setI(k)} className={`h-1.5 rounded-full transition-all ${k === i ? "w-8 bg-gold" : "w-1.5 bg-white/30"}`} aria-label={`Review ${k + 1}`} />
+          <button key={r.id} onClick={() => setI(k)} className={`h-1.5 rounded-full transition-all ${k === current ? "w-8 bg-gold" : "w-1.5 bg-white/30"}`} aria-label={`Review ${k + 1}`} />
         ))}
         <button onClick={() => setI((i + 1) % n)} className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-white hover:border-gold hover:text-gold" aria-label="Next review">›</button>
       </div>

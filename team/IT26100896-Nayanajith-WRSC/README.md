@@ -45,6 +45,8 @@ For a new booking, follow **Controller → Service → Booking rules → Reposit
 
 Create -> history -> change guests/date -> cancel eligible booking; explain 24-hour rule, slot locking and state validation.
 
+Pickup place is stored separately from special requests. The booking response includes vehicle registration, saved safari/vehicle costs, payment amount and collection date. Administrators can also create personal bookings, with the same ownership and notice checks as customers. See [booking and account details](../../docs/ACCOUNT_BOOKING_REVIEWS.md).
+
 ## Persistence and file handling
 
 H2 SQL stores bookings and most other entities. Guide records use `resources.txt` file CRUD. The `/admin/files` page saves and reads text snapshots of SQL-backed modules.

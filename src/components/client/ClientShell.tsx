@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
-import { getCustomerSession } from "@/lib/session";
+import { getWebsiteSession } from "@/lib/session";
 import Footer from "./Footer";
 import Navbar from "./Navbar";
 import RevealObserver from "./RevealObserver";
 
-/** Public client website frame — contains NO admin navigation at all. */
+/** Shared website frame for visitors, customers and signed-in administrators. */
 export default async function ClientShell({ children }: { children: ReactNode }) {
-  const me = await getCustomerSession();
+  const me = await getWebsiteSession();
   return (
     <>
-      <Navbar userName={me?.name ?? null} />
+      <Navbar userName={me?.name ?? null} userRole={me?.role} userEmail={me?.email} />
       <main className="min-h-screen">{children}</main>
       <Footer />
       <RevealObserver />

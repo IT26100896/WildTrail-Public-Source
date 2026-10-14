@@ -7,7 +7,7 @@ Component: **Review and Rating Management**
 
 ## Scope
 
-Review moderation, clearly labeled fictional sample reviews, customer feedback and contact inbox belong here.
+Review publication, administrator replies, deletion, clearly labeled fictional sample reviews, customer feedback and contact inbox belong here.
 
 ## Java files to understand and develop
 
@@ -28,7 +28,8 @@ Review moderation, clearly labeled fictional sample reviews, customer feedback a
 - [`src/app/admin/(panel)/reviews/page.tsx`](../../src/app/admin/%28panel%29/reviews/page.tsx)
 - [`src/app/admin/(panel)/messages/page.tsx`](../../src/app/admin/%28panel%29/messages/page.tsx)
 - [`src/components/client/MyReviews.tsx`](../../src/components/client/MyReviews.tsx)
-- [`src/lib/sample-reviews.ts`](../../src/lib/sample-reviews.ts)
+- [`src/components/client/ReviewReplies.tsx`](../../src/components/client/ReviewReplies.tsx)
+- [Sample review migration](../../database/schema.sql)
 
 ## Shared files - change only your own function
 
@@ -39,7 +40,7 @@ Review moderation, clearly labeled fictional sample reviews, customer feedback a
 
 ## Viva demonstration
 
-Submit -> read -> own edit -> admin moderation -> delete; explain real reviews versus fictional examples and verified review subtype.
+Submit -> immediate public display -> administrator reply -> owner/admin delete; explain real reviews versus fictional examples and verified review subtype.
 
 ## Persistence and file handling
 

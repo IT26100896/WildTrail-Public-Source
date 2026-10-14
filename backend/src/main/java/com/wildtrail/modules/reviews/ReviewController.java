@@ -6,58 +6,47 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(value={"/api"})
+@RequestMapping("/api/reviews")
 public class ReviewController {
-    private final ReviewService people;
+    private final ReviewService reviews;
+    public ReviewController(ReviewService reviews) { this.reviews = reviews; }
 
-    public ReviewController(ReviewService people) {
-        this.people = people;
+    @GetMapping
+    public List<Map<String, Object>> reviews(@RequestParam(defaultValue="0") String all, Authentication auth) {
+        boolean admin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(role -> "ROLE_ADMIN".equals(role.getAuthority()));
+        return reviews.reviews(!admin || !"1".equals(all));
     }
 
-    @GetMapping(value={"/reviews"})
-    public List<Map<String, Object>> reviews(@RequestParam(defaultValue="0") String all, Authentication authentication) {
-        boolean admin = authentication != null && authentication.getAuthorities().stream().anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
-        return this.people.reviews(!"1".equals(all) || !admin);
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
+    public ResponseEntity<Map<String, Object>> submit(@RequestBody Map<String, Object> body, Authentication auth) {
+        Map<String, Object> review = reviews.submitReview(body, (SessionUser) auth.getPrincipal());
+        return ResponseEntity.status(201).body(Map.of("ok", true, "id", review.get("id"),
+                "message", "Thank you! Your review is now published."));
     }
 
-    @PostMapping(value={"/reviews"})
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<Map<String, Object>> submitReview(@RequestBody Map<String, Object> body, Authentication authentication) {
-        SessionUser user = this.principal(authentication);
-        this.people.submitReview(body, user == null ? null : Integer.valueOf(user.uid()));
-        return ResponseEntity.status((int)201).body(Map.of("ok", true, "message", "Thank you! Your review will appear after moderation."));
-    }
-
-    @PatchMapping(value={"/reviews/{id}"})
-    @PreAuthorize(value="hasRole('ADMIN')")
-    public Map<String, Object> approveReview(@PathVariable int id, @RequestBody Map<String, Object> body) {
-        return this.people.approveReview(id, body);
-    }
-
-    @DeleteMapping(value={"/reviews/{id}"})
-    @PreAuthorize(value="hasRole('ADMIN')")
-    public Map<String, Boolean> deleteReview(@PathVariable int id) {
-        this.people.deleteReview(id);
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Boolean> delete(@PathVariable int id) {
+        reviews.deleteReview(id);
         return Map.of("ok", true);
     }
 
-    private SessionUser principal(Authentication authentication) {
-        Object object;
-        if (authentication != null && (object = authentication.getPrincipal()) instanceof SessionUser) {
-            SessionUser user = (SessionUser)object;
-            return user;
-        }
-        return null;
+    @PostMapping("/{id}/replies")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> reply(@PathVariable int id,
+            @RequestBody Map<String, Object> body, Authentication auth) {
+        return ResponseEntity.status(201).body(reviews.reply(id, body, (SessionUser) auth.getPrincipal()));
+    }
+
+    @DeleteMapping("/{id}/replies/{replyId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Boolean> deleteReply(@PathVariable int id, @PathVariable int replyId) {
+        reviews.deleteReply(id, replyId);
+        return Map.of("ok", true);
     }
 }

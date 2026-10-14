@@ -2,7 +2,7 @@
 -- WILDTRAIL Safari Booking System — schema.sql
 -- Logical database: wildtrail_safari
 -- Written in portable SQL (PostgreSQL dialect; MySQL notes inline).
--- Executed automatically & idempotently by src/server/config/DatabaseBootstrap.ts
+-- Executed automatically & idempotently by Spring Boot SQL initialization.
 -- =====================================================================
 
 CREATE TABLE IF NOT EXISTS users (
@@ -140,3 +140,47 @@ CREATE TABLE IF NOT EXISTS booking_guide_assignments (
 -- Serialize guide assignment/date changes until their SQL transaction commits.
 CREATE TABLE IF NOT EXISTS guide_schedule_lock(id INTEGER PRIMARY KEY);
 INSERT INTO guide_schedule_lock(id) SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM guide_schedule_lock WHERE id=1);
+
+-- Nullable additions preserve bookings and vehicles created before these fields existed.
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS registration_number VARCHAR(32);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vehicle_registration ON vehicles(registration_number);
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pickup_place VARCHAR(240);
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS package_amount NUMERIC(10,2);
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS vehicle_amount NUMERIC(10,2);
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS author_email VARCHAR(160);
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS author_role VARCHAR(20);
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_sample BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS sender_role VARCHAR(20);
+
+CREATE TABLE IF NOT EXISTS review_replies (
+  id SERIAL PRIMARY KEY,
+  review_id INTEGER NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+  author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  author_name VARCHAR(120) NOT NULL,
+  author_email VARCHAR(160) NOT NULL,
+  comment VARCHAR(1000) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Run this upgrade once. Deleted demonstration reviews must not reappear on restart.
+CREATE TABLE IF NOT EXISTS app_migrations (name VARCHAR(80) PRIMARY KEY);
+UPDATE reviews SET
+  author_user_id = (SELECT c.user_id FROM customers c WHERE c.id=reviews.customer_id),
+  author_email = (SELECT c.email FROM customers c WHERE c.id=reviews.customer_id),
+  author_role = 'ROLE_CUSTOMER', approved = TRUE
+WHERE NOT EXISTS (SELECT 1 FROM app_migrations WHERE name='public-reviews-v1');
+INSERT INTO reviews(author_name,country,rating,comment,approved,review_type,is_sample)
+SELECT 'Sample Traveller A','Sample review',5,
+  'The early morning safari was peaceful, and the guide helped us spot wildlife along the trail.',TRUE,'SAMPLE',TRUE
+WHERE NOT EXISTS (SELECT 1 FROM app_migrations WHERE name='public-reviews-v1');
+INSERT INTO reviews(author_name,country,rating,comment,approved,review_type,is_sample)
+SELECT 'Sample Traveller B','Sample review',4,
+  'Choosing our park, jeep and time slot was straightforward. The family enjoyed the trip.',TRUE,'SAMPLE',TRUE
+WHERE NOT EXISTS (SELECT 1 FROM app_migrations WHERE name='public-reviews-v1');
+INSERT INTO reviews(author_name,country,rating,comment,approved,review_type,is_sample)
+SELECT 'Sample Traveller C','Sample review',5,
+  'A lovely day exploring the national park, with plenty of time to observe the animals.',TRUE,'SAMPLE',TRUE
+WHERE NOT EXISTS (SELECT 1 FROM app_migrations WHERE name='public-reviews-v1');
+INSERT INTO app_migrations(name) SELECT 'public-reviews-v1'
+WHERE NOT EXISTS (SELECT 1 FROM app_migrations WHERE name='public-reviews-v1');

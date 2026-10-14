@@ -15,7 +15,7 @@ Customer / staff browser
     → JDBC repository and H2 SQL, or FileGuideRepository and resources.txt
 ```
 
-A booking crosses components: customer identity (01), package and price (02), booking rules (03), vehicle and guide availability (04), and payment state (05). A review (06) belongs to a customer and can be moderated by staff. The [class diagram](CLASS_DIAGRAM.md) shows the principal relationships in one view.
+A booking crosses components: customer identity (01), package and price (02), booking rules (03), vehicle and guide availability (04), and payment state (05). A review (06) belongs to a signed-in customer or administrator, appears immediately, and supports staff replies and deletion. The [class diagram](CLASS_DIAGRAM.md) shows the principal relationships in one view.
 
 ## Six component class inventories
 
@@ -86,7 +86,7 @@ Member-specific UI paths and viva steps: [README.md](../team/IT26100900-Lakshani
 
 ### 06. Reviews — Gamage C.I.P (IT26100901)
 
-Customer reviews, moderation, ratings, and contact feedback.
+Customer/admin reviews, immediate publication, staff replies, deletion, ratings, and contact feedback.
 
 | Java role | Classes |
 |---|---|
@@ -128,9 +128,9 @@ Shared files can contain functions from several modules. Ownership follows the f
 
 | Area | Source files |
 |---|---|
-| `src/components/client/` | [AuthPanel.tsx](../src/components/client/AuthPanel.tsx), [BookingWizard.tsx](../src/components/client/BookingWizard.tsx), [ClientShell.tsx](../src/components/client/ClientShell.tsx), [Footer.tsx](../src/components/client/Footer.tsx), [Hero.tsx](../src/components/client/Hero.tsx), [MyReviews.tsx](../src/components/client/MyReviews.tsx), [Navbar.tsx](../src/components/client/Navbar.tsx), [PrintButton.tsx](../src/components/client/PrintButton.tsx), [ProfileForm.tsx](../src/components/client/ProfileForm.tsx), [QuickBooking.tsx](../src/components/client/QuickBooking.tsx), [RevealObserver.tsx](../src/components/client/RevealObserver.tsx), [cards.tsx](../src/components/client/cards.tsx), [forms.tsx](../src/components/client/forms.tsx), [interactive.tsx](../src/components/client/interactive.tsx), [sections.tsx](../src/components/client/sections.tsx) |
+| `src/components/client/` | [AuthPanel.tsx](../src/components/client/AuthPanel.tsx), [BookingWizard.tsx](../src/components/client/BookingWizard.tsx), [ClientShell.tsx](../src/components/client/ClientShell.tsx), [Footer.tsx](../src/components/client/Footer.tsx), [Hero.tsx](../src/components/client/Hero.tsx), [MyReviews.tsx](../src/components/client/MyReviews.tsx), [Navbar.tsx](../src/components/client/Navbar.tsx), [PrintButton.tsx](../src/components/client/PrintButton.tsx), [ProfileForm.tsx](../src/components/client/ProfileForm.tsx), [PaymentSummary.tsx](../src/components/client/PaymentSummary.tsx), [ReviewReplies.tsx](../src/components/client/ReviewReplies.tsx), [QuickBooking.tsx](../src/components/client/QuickBooking.tsx), [RevealObserver.tsx](../src/components/client/RevealObserver.tsx), [cards.tsx](../src/components/client/cards.tsx), [forms.tsx](../src/components/client/forms.tsx), [interactive.tsx](../src/components/client/interactive.tsx), [sections.tsx](../src/components/client/sections.tsx) |
 | `src/components/admin/` | [AdminAccountsManager.tsx](../src/components/admin/AdminAccountsManager.tsx), [AdminLoginForm.tsx](../src/components/admin/AdminLoginForm.tsx), [AdminSidebar.tsx](../src/components/admin/AdminSidebar.tsx), [managers.tsx](../src/components/admin/managers.tsx) |
-| `src/lib/` | [api.ts](../src/lib/api.ts), [backend-api.ts](../src/lib/backend-api.ts), [content.ts](../src/lib/content.ts), [sample-reviews.ts](../src/lib/sample-reviews.ts), [session.ts](../src/lib/session.ts) |
+| `src/lib/` | [api.ts](../src/lib/api.ts), [backend-api.ts](../src/lib/backend-api.ts), [content.ts](../src/lib/content.ts), [session.ts](../src/lib/session.ts) |
 | `src/types/` | [domain.ts](../src/types/domain.ts) |
 
 ## Storage, setup, and verification
@@ -149,7 +149,7 @@ Shared files can contain functions from several modules. Ownership follows the f
 1. **Users → bookings:** the authenticated customer owns the booking; staff access is role checked by the Java API.
 2. **Safaris + resources → bookings:** package rules set price and guest limits; vehicle availability and capacity protect the reserved slot.
 3. **Bookings → payments:** creating or changing a booking coordinates the related pending payment and price in a transaction.
-4. **Customers + reviews:** a signed-in customer can manage their own review; staff moderate it before public display.
+4. **Customers + reviews:** a signed-in customer can manage their own review; reviews appear immediately and staff can reply or delete them.
 5. **H2 + files:** SQL is authoritative for most records. Guide CRUD really reads/writes `resources.txt`; staff text reports are snapshots.
 
 The [main README](../README.md) gives the overview, [workload guide](WORKLOAD_DISTRIBUTION.md) assigns responsibilities, and [viva guide](VIVA_GUIDE.md) gives the demonstration route. This map lists implementation locations; the Git history is the evidence for specific individual changes.

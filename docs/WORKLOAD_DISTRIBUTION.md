@@ -12,7 +12,7 @@ The six components follow the supplied Safari Booking System workload guide. Jav
 | 03 | IT26100896 - Nayanajith W.R.S.C | Booking and Reservation Management | Availability, date/guest changes, cancellation, booking dashboard and quick booking. |
 | 04 | IT26100899 - Senevirathna M.K.K.T | Guide and Vehicle Management | Guide schedules, vehicle availability, driver assignment and real `resources.txt` file CRUD. |
 | 05 | IT26100900 - Lakshani W.G.C | Payment and Transaction Management | Cash collection, campus-only card demo, receipt view and text file reports. |
-| 06 | IT26100901 - Gamage C.I.P | Review and Rating Management | Customer feedback, contact inbox, moderation and clearly labeled fictional examples. |
+| 06 | IT26100901 - Gamage C.I.P | Review and Rating Management | Customer feedback, contact inbox, immediate publication, staff replies, deletion and clearly labeled fictional examples. |
 
 Each member's exact Java and UI paths, shared functions and viva demonstration are in their named `team/IT.../README.md` folder. Shared files such as `src/components/admin/managers.tsx`, `src/components/client/forms.tsx`, `src/components/client/BookingWizard.tsx`, `src/components/client/cards.tsx` and `src/components/client/sections.tsx` contain multiple responsibilities. Edit only the relevant function and ask the affected module owner to review changes.
 

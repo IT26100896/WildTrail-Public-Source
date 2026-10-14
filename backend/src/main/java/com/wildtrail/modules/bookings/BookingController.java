@@ -40,7 +40,7 @@ public class BookingController {
     }
 
     @PostMapping(value={"/bookings"})
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
     public ResponseEntity<Map<String, Object>> create(@RequestBody Map<String, Object> body, Authentication authentication) {
         // Pass the signed-in customer to the service so it can check ownership.
         SessionUser user = null;
@@ -51,13 +51,13 @@ public class BookingController {
     }
 
     @GetMapping(value={"/bookings/mine"})
-    @PreAuthorize(value="hasRole('CUSTOMER')")
+    @PreAuthorize(value="hasAnyRole('ADMIN','CUSTOMER')")
     public List<Map<String, Object>> mine(Authentication authentication) {
         return this.bookings.mine(((SessionUser)authentication.getPrincipal()).uid());
     }
 
     @PostMapping(value={"/bookings/mine"})
-    @PreAuthorize(value="hasRole('CUSTOMER')")
+    @PreAuthorize(value="hasAnyRole('ADMIN','CUSTOMER')")
     public Map<String, Object> cancelMine(@RequestBody Map<String, Object> body, Authentication authentication) {
         // The existing client sends the booking ID in a POST body.
         Object id = body.get("id");
@@ -128,7 +128,7 @@ public class BookingController {
     }
 
     @PutMapping("/bookings/mine/{id}")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
     public Map<String, Object> editMine(@PathVariable int id,
                                         @RequestBody Map<String, Object> body,
                                         Authentication authentication) {

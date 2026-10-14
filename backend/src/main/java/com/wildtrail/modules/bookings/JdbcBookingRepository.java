@@ -15,15 +15,20 @@ public class JdbcBookingRepository {
     private static final String DETAIL_SELECT = """
             SELECT b.id, b.reference, b.safari_date AS "safariDate", b.time_slot AS "timeSlot",
                    b.guests, b.total_amount AS "totalAmount", b.status,
-                   b.special_requests AS "specialRequests", b.created_at AS "createdAt",
+                   b.special_requests AS "specialRequests", b.pickup_place AS "pickupPlace",
+                   b.package_amount AS "packageAmount", b.vehicle_amount AS "vehicleAmount",
+                   b.created_at AS "createdAt",
                    b.customer_id AS "customerId", c.full_name AS "customerName",
-                   c.email AS "customerEmail", c.phone AS "customerPhone",
+                   c.email AS "customerEmail", c.phone AS "customerPhone", u.role AS "customerRole",
                    b.package_id AS "packageId", p.name AS "packageName",
                    d.name AS "destinationName", b.vehicle_id AS "vehicleId",
-                   v.name AS "vehicleName", pay.method AS "paymentMethod",
-                   pay.status AS "paymentStatus", pay.transaction_ref AS "transactionRef"
+                   v.name AS "vehicleName", v.registration_number AS "vehicleNumber", pay.method AS "paymentMethod",
+                   pay.status AS "paymentStatus", pay.transaction_ref AS "transactionRef",
+                   pay.paid_at AS "paidAt", pay.created_at AS "paymentCreatedAt",
+                   pay.amount AS "paymentAmount"
             FROM bookings b
             JOIN customers c ON c.id = b.customer_id
+            LEFT JOIN users u ON u.id = c.user_id
             JOIN safari_packages p ON p.id = b.package_id
             JOIN destinations d ON d.id = p.destination_id
             JOIN vehicles v ON v.id = b.vehicle_id
@@ -57,7 +62,7 @@ public class JdbcBookingRepository {
                 SELECT id, reference, customer_id AS "customerId", package_id AS "packageId",
                        vehicle_id AS "vehicleId", safari_date AS "safariDate",
                        time_slot AS "timeSlot", guests,
-                       special_requests AS "specialRequests", total_amount AS "totalAmount", status
+                       special_requests AS "specialRequests", pickup_place AS "pickupPlace", total_amount AS "totalAmount", status
                 FROM bookings WHERE id = ?
                 """;
         List<Map<String, Object>> rows = this.jdbc.queryForList(sql, id);
@@ -93,14 +98,14 @@ public class JdbcBookingRepository {
         String sql = """
                 INSERT INTO bookings(reference, customer_id, package_id, vehicle_id,
                                      safari_date, time_slot, guests, special_requests,
-                                     total_amount, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, NULLIF(?, ''), ?, ?) RETURNING id
+                                     total_amount, status, pickup_place, package_amount, vehicle_amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NULLIF(?, ''), ?, ?, NULLIF(?, ''), ?, ?) RETURNING id
                 """;
         return JdbcInsert.id(this.jdbc, sql, new Object[]{
                 values.get("reference"), values.get("customerId"), values.get("packageId"),
                 values.get("vehicleId"), values.get("safariDate"), values.get("timeSlot"),
                 values.get("guests"), values.get("specialRequests"), values.get("totalAmount"),
-                values.get("status")});
+                values.get("status"), values.get("pickupPlace"), values.get("packageAmount"), values.get("vehicleAmount")});
     }
 
     // Locking rows prevents simultaneous requests from taking the same resource.
@@ -140,7 +145,7 @@ public class JdbcBookingRepository {
         });
     }
 
-    public void edit(int id, LocalDate date, String slot, int guests, String requests, double total) {
+    public void edit(int id, LocalDate date, String slot, int guests, String requests, double total, String pickup, double packageAmount, double vehicleAmount) {
         // Keep a previously assigned guide from being double-booked on the new date.
         String guideConflictSql = """
                 SELECT COUNT(*) FROM booking_guide_assignments mine
@@ -158,9 +163,9 @@ public class JdbcBookingRepository {
         jdbc.update("""
                 UPDATE bookings
                 SET safari_date = ?, time_slot = ?, guests = ?, special_requests = ?,
-                    total_amount = ?, updated_at = NOW()
+                    total_amount = ?, pickup_place = NULLIF(?, ''), package_amount = ?, vehicle_amount = ?, updated_at = NOW()
                 WHERE id = ?
-                """, date, slot, guests, requests, total, id);
+                """, date, slot, guests, requests, total, pickup, packageAmount, vehicleAmount, id);
         // Pending payment follows the revised quote in the same transaction.
         jdbc.update("""
                 UPDATE payments SET amount = ?

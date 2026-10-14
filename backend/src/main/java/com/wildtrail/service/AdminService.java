@@ -57,7 +57,7 @@ public class AdminService {
         result.put("revenuePending", this.sumPayments(payments, "PENDING"));
         result.put("activePackages", this.catalog.packages(true).size());
         result.put("availableVehicles", this.vehicles.vehicles(true).size());
-        result.put("pendingReviews", reviews.stream().filter(row -> !Boolean.TRUE.equals(row.get("approved"))).count());
+        result.put("publishedReviews", reviews.stream().filter(row -> !Boolean.TRUE.equals(row.get("sample"))).count());
         result.put("statusBreakdown", breakdown);
         result.put("revenueByPackage", topPackages);
         result.put("upcoming", upcoming);

@@ -4,18 +4,23 @@ import crypto from 'node:crypto';
 
 // Run against a disposable QA database; this suite creates campus sample records.
 if (process.env.QA_ALLOW_MUTATIONS !== '1') throw new Error('Set QA_ALLOW_MUTATIONS=1 after starting the API with a disposable QA database.');
-const config = JSON.parse((await readFile('.local/config.json', 'utf8')).replace(/^\uFEFF/, ''));
+const config = JSON.parse((await readFile(process.env.QA_CONFIG_PATH || '.local/config.json', 'utf8')).replace(/^\uFEFF/, ''));
 const base = process.env.QA_BASE_URL || 'http://localhost:3000';
 const results = [], errors = [];
 await mkdir('qa/screenshots', { recursive: true });
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-const page = await context.newPage();
-page.on('pageerror', e => errors.push(e.message));
-page.on('response', r => { if (r.url().startsWith(base) && r.status() >= 500) errors.push(`${r.status()} ${new URL(r.url()).pathname}`); });
-page.on('dialog', dialog => dialog.accept());
+const customerPage = await context.newPage();
+const adminContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const adminPage = await adminContext.newPage();
+let page = customerPage;
+for (const target of [customerPage, adminPage]) {
+target.on('pageerror', e => errors.push(e.message));
+target.on('response', r => { if (r.url().startsWith(base) && r.status() >= 500) errors.push(`${r.status()} ${new URL(r.url()).pathname}`); });
+target.on('dialog', dialog => dialog.accept());
+}
 async function check(name, task) { await task(); results.push(name); console.log(`PASS ${name}`); }
-async function go(path) { const response = await page.goto(base + path, { waitUntil: 'networkidle' }); expect(response?.status()).toBeLessThan(400); await expect(page.locator('body')).not.toContainText('Application error'); }
+async function go(path) { page = path.startsWith('/admin') ? adminPage : customerPage; const response = await page.goto(base + path, { waitUntil: 'networkidle' }); expect(response?.status()).toBeLessThan(400); await expect(page.locator('body')).not.toContainText('Application error'); }
 const unique = crypto.randomBytes(5).toString('hex');
 const email = `browser-${unique}@example.test`;
 const day = new Date(Date.now() + 20 * 864e5).toISOString().slice(0, 10);
@@ -34,7 +39,7 @@ try {
     await page.waitForURL('**/admin/dashboard');
     for (const route of ['dashboard','bookings','payments','customers','packages','vehicles','guides','files','reviews','messages']) await go(`/admin/${route}`);
   });
-  await check('customer UI registration with separate admin session', async () => {
+  await check('customer UI registration in a separate browser context', async () => {
     await go('/client/register');
     await page.getByLabel('Full name', { exact: true }).fill('Browser QA Customer');
     await page.getByLabel('Phone', { exact: true }).fill('+94771234567');
@@ -52,6 +57,7 @@ try {
     await expect(jeep).toBeEnabled(); await jeep.click();
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByLabel('Phone / WhatsApp *', { exact: true }).fill('+94771234567');
+    await page.getByLabel('Pickup place *', { exact: true }).fill('QA park meeting point');
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.locator('body')).toContainText('Pay in cash');
     const confirm = page.getByRole('button', { name: /Confirm & book/ });
@@ -82,23 +88,27 @@ try {
     await expect(page.getByRole('status')).toContainText('Profile updated');
     await page.reload(); await expect(page.getByLabel('Full name', { exact: true })).toHaveValue('Browser QA Updated');
   });
-  await check('review submit, moderate, owner edit and delete', async () => {
+  await check('review publishes immediately, admin replies, owner deletes', async () => {
     await go('/client/reviews'); await page.getByLabel('Your experience', { exact: true }).fill(`QA review ${unique}`);
     await page.getByRole('button', { name: 'Submit review', exact: true }).click();
-    await expect(page.locator('body')).toContainText('moderation');
-    await go('/admin/reviews'); await page.getByRole('button', { name: 'Approve', exact: true }).first().click();
-    await expect(page.getByRole('button', { name: 'Hide', exact: true }).first()).toBeVisible();
-    await go('/client/my-reviews'); const mine = page.getByRole('heading', { name: 'My reviews', exact: true }); await expect(mine).toBeVisible();
-    await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
-    await page.getByLabel('Comment', { exact: true }).fill(`QA edited ${unique}`);
-    await page.getByRole('button', { name: 'Save review', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Save review', exact: true })).toHaveCount(0);
-    await expect(page.locator('body')).toContainText('Awaiting moderation');
-    await page.getByRole('button', { name: 'Delete', exact: true }).first().click(); await expect(page.locator('body')).toContainText('No reviews submitted yet');
+    await expect(page.locator('body')).toContainText('Your review is now published');
+    await go('/admin/reviews');
+    const review=page.locator('article').filter({ hasText: `QA review ${unique}` });
+    await expect(review).toContainText(email);
+    await expect(page.getByRole('button', { name: 'Approve', exact: true })).toHaveCount(0);
+    await review.getByLabel('Reply as administrator').fill('Thank you for your feedback');
+    await review.getByRole('button', { name: 'Post reply', exact: true }).click();
+    await expect(review).toContainText('Thank you for your feedback');
+    await go('/client/my-reviews');
+    await expect(page.getByRole('heading', { name: 'My reviews', exact: true })).toBeVisible();
+    await expect(page.locator('body')).toContainText('Thank you for your feedback');
+    await expect(page.getByRole('button', { name: 'Edit', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Delete review', exact: true }).first().click();
+    await expect(page.locator('body')).toContainText('No reviews submitted yet');
   });
   await check('contact form writes admin inbox', async () => {
-    await go('/client/contact'); await page.getByLabel('Name', { exact: true }).fill('Browser QA Visitor');
-    await page.getByLabel('Email', { exact: true }).fill(email); await page.getByLabel('Message', { exact: true }).fill(`Safari inquiry ${unique}`);
+    await go('/client/contact');
+    await expect(page.getByLabel('Email', { exact: true })).toHaveValue(email); await page.getByLabel('Message', { exact: true }).fill(`Safari inquiry ${unique}`);
     await page.getByRole('button', { name: 'Send message', exact: true }).click();
     await expect(page.locator('body')).toContainText('message has been recorded');
     await go('/admin/messages'); await expect(page.locator('body')).toContainText(`Safari inquiry ${unique}`);
@@ -112,7 +122,7 @@ try {
     const row = page.locator('table').first().locator('tr').filter({ hasText: `QA Guide ${unique}` }); await expect(row).toBeVisible();
     const create = await context.request.post(base + '/api/bookings', { data: { packageId: 1, vehicleId: 2, safariDate: day, timeSlot: '05:30', guests: 2, paymentMethod: 'CASH', fullName: 'Browser QA Updated', email, phone: '+94771234567' } });
     expect(create.status()).toBe(201); const scheduled = await create.json();
-    const guideList = await (await context.request.get(base + '/api/guides')).json();
+    const guideList = await (await adminContext.request.get(base + '/api/guides')).json();
     const guide = guideList.find(g => g.fullName === `QA Guide ${unique}`);
     await go('/admin/guides');
     await page.getByLabel('Active booking', { exact: true }).selectOption(String(scheduled.id));
@@ -120,8 +130,8 @@ try {
     await page.getByRole('button', { name: 'Assign guide', exact: true }).click();
     await expect(page.locator('tr').filter({ hasText: scheduled.reference })).toContainText(`QA Guide ${unique}`);
     await page.screenshot({ path: 'qa/screenshots/guide-assignment.png', fullPage: true });
-    expect((await context.request.patch(base + `/api/bookings/${scheduled.id}`, { data: { status: 'CANCELLED' } })).status()).toBe(200);
-    expect((await context.request.delete(base + `/api/bookings/${scheduled.id}`)).status()).toBe(200);
+    expect((await adminContext.request.patch(base + `/api/bookings/${scheduled.id}`, { data: { status: 'CANCELLED' } })).status()).toBe(200);
+    expect((await adminContext.request.delete(base + `/api/bookings/${scheduled.id}`)).status()).toBe(200);
     await go('/admin/guides');
 
     await row.getByRole('button', { name: 'Edit', exact: true }).click(); await page.getByLabel('Guide name', { exact: true }).fill(`QA Guide Edited ${unique}`);
@@ -142,7 +152,7 @@ try {
   });
   await check('desktop and mobile pages fit viewport', async () => {
     for (const width of [1440,390]) {
-      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      for (const target of [customerPage,adminPage]) await target.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       for (const route of ['/client/home','/client/booking?package=1','/client/my-bookings','/client/contact','/admin/dashboard','/admin/guides','/admin/payments','/admin/messages']) {
         await go(route);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);

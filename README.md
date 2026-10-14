@@ -56,15 +56,17 @@ On first setup, the script generates a local administrator password in **`.local
 
 | Area | Implemented flow |
 |---|---|
-| Accounts | Customer registration, sign in/out, profile and password updates, protected staff routes, and administrator accounts |
+| Accounts | Customer registration, sign in/out, profile and password updates, protected staff routes, and administrator accounts that also support personal bookings and reviews |
 | Safaris | Searchable destinations and packages, package management, and vehicle catalogue |
-| Reservations | Multi-step booking, server-calculated pricing, availability checks, booking history, and eligible changes/cancellations with 24-hour notice |
+| Reservations | Multi-step booking, server-calculated pricing, availability checks, pickup places, vehicle numbers, booking history, and eligible changes/cancellations with 24-hour notice |
 | Resources | Guide CRUD in `resources.txt`, vehicle management, schedules, and guide assignment |
-| Payments | Cash-on-arrival tracking, a **campus-only card demonstration**, staff-recorded collection/refunds, and printable receipts |
-| Feedback | Customer reviews with own edit/delete and staff moderation; clearly labeled fictional examples; contact form and staff inbox |
+| Payments | Cash-on-arrival tracking, a **campus-only card demonstration**, staff-recorded collection/refunds, payment summaries with actual collection dates, and printable receipts |
+| Feedback | Immediately published customer/admin reviews, deletion and administrator replies; removable fictional samples; contact form and staff inbox |
 | Reports | Save/read text snapshots for the six business areas |
 
 The card demonstration keeps the payment **pending** and accepts no card number, expiry, CVV, or holder details. Real online payment, outbound email, verified park availability, and a production business identity are outside this project.
+
+See [account, booking and review behavior](docs/ACCOUNT_BOOKING_REVIEWS.md) for personal administrator bookings, pickup places, vehicle numbers, payment dates and public review replies.
 
 ## Team and responsibilities
 
@@ -115,7 +117,7 @@ flowchart LR
 | **03 · Nayanajith · IT26100896** | [Booking](backend/src/main/java/com/wildtrail/modules/bookings/Booking.java), [BookingService](backend/src/main/java/com/wildtrail/modules/bookings/BookingService.java), [BookingController](backend/src/main/java/com/wildtrail/modules/bookings/BookingController.java), [JdbcBookingRepository](backend/src/main/java/com/wildtrail/modules/bookings/JdbcBookingRepository.java) | [Booking wizard](src/components/client/BookingWizard.tsx), [my bookings](src/app/client/my-bookings/page.tsx), [staff bookings](src/app/admin/%28panel%29/bookings/page.tsx) |
 | **04 · Senevirathna · IT26100899** | [Guide](backend/src/main/java/com/wildtrail/modules/resources/Guide.java), [Vehicle](backend/src/main/java/com/wildtrail/modules/resources/Vehicle.java), [FileGuideRepository](backend/src/main/java/com/wildtrail/modules/resources/FileGuideRepository.java), [VehicleService](backend/src/main/java/com/wildtrail/modules/resources/VehicleService.java) | [Vehicles](src/app/client/vehicles/page.tsx), [staff guides](src/app/admin/%28panel%29/guides/page.tsx), [staff vehicles](src/app/admin/%28panel%29/vehicles/page.tsx) |
 | **05 · Lakshani · IT26100900** | [Payment](backend/src/main/java/com/wildtrail/modules/payments/Payment.java), [PaymentProcessor](backend/src/main/java/com/wildtrail/modules/payments/PaymentProcessor.java), [PaymentService](backend/src/main/java/com/wildtrail/modules/payments/PaymentService.java), [ReceiptController](backend/src/main/java/com/wildtrail/modules/payments/ReceiptController.java) | [Booking payment step](src/components/client/BookingWizard.tsx), [receipt](src/app/client/receipts/%5Bid%5D/page.tsx), [staff payments](src/app/admin/%28panel%29/payments/page.tsx) |
-| **06 · Gamage · IT26100901** | [Review](backend/src/main/java/com/wildtrail/modules/reviews/Review.java), [VerifiedReview](backend/src/main/java/com/wildtrail/modules/reviews/VerifiedReview.java), [ReviewService](backend/src/main/java/com/wildtrail/modules/reviews/ReviewService.java), [ReviewController](backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java) | [Reviews](src/app/client/reviews/page.tsx), [my reviews](src/app/client/my-reviews/page.tsx), [contact](src/app/client/contact/page.tsx), [staff moderation](src/app/admin/%28panel%29/reviews/page.tsx) |
+| **06 · Gamage · IT26100901** | [Review](backend/src/main/java/com/wildtrail/modules/reviews/Review.java), [VerifiedReview](backend/src/main/java/com/wildtrail/modules/reviews/VerifiedReview.java), [ReviewService](backend/src/main/java/com/wildtrail/modules/reviews/ReviewService.java), [ReviewController](backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java) | [Reviews](src/app/client/reviews/page.tsx), [my reviews](src/app/client/my-reviews/page.tsx), [contact](src/app/client/contact/page.tsx), [review management](src/app/admin/%28panel%29/reviews/page.tsx) |
 
 The [complete project map](docs/SYSTEM_MAP.md) links Java classes, web routes, shared components, data stores, and cross-module dependencies. The [integrated class diagram](docs/CLASS_DIAGRAM.md) shows how the six components work together.
 
@@ -142,7 +144,7 @@ WildTrail-Public-Source/
 │       │   ├── modules/bookings/    03: reservations and availability
 │       │   ├── modules/resources/   04: guides and vehicles
 │       │   ├── modules/payments/    05: payment state and receipts
-│       │   ├── modules/reviews/     06: reviews and moderation
+│       │   ├── modules/reviews/     06: reviews and replies
 │       │   ├── config/              Application configuration and startup
 │       │   ├── controller/          Shared HTTP endpoints
 │       │   ├── repository/          Shared persistence support

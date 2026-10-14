@@ -17,7 +17,8 @@ class ReviewCountryTest {
         when(customers.customerByUser(5)).thenReturn(Map.of("id", 2, "fullName", "Reviewer"));
         ReviewService service = new ReviewService(reviews, customers);
         var details = Map.<String, Object>of("country", "A".repeat(81), "rating", 5, "comment", "Excellent safari");
-        assertThrows(ApiException.class, () -> service.submitReview(details, 5));
-        verify(reviews, never()).createReview(any(), anyString(), anyString(), anyInt(), anyString(), anyString());
+        assertThrows(ApiException.class, () -> service.submitReview(details,
+                new com.wildtrail.security.SessionUser(5, "reviewer@example.test", "Reviewer", "ROLE_CUSTOMER")));
+        verifyNoInteractions(reviews);
     }
 }

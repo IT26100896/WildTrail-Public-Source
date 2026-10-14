@@ -118,18 +118,18 @@ public class BookingService {
         }
         Payment payment = PaymentFactory.create(method, quote.get("total"), body);
         PaymentResult result = payment.process();
-        String name = RequestValues.text(body, "fullName", 120);
+        String name = user == null ? "" : user.name();
         String email = RequestValues.email(body);
         String phone = RequestValues.text(body, "phone", 40);
         String country = RequestValues.optionalText(body, "country");
-        if (user == null || !user.role().equals("ROLE_CUSTOMER")) {
+        if (user == null || !List.of("ROLE_CUSTOMER", "ROLE_ADMIN").contains(user.role())) {
             throw ApiException.unauthorized("Please sign in before booking");
         }
         if (!email.equalsIgnoreCase(user.email())) {
             throw ApiException.forbidden("Booking email must match your account");
         }
         // Associate the booking with the signed-in customer's record.
-        customer = this.customers.customerByUser(user.uid());
+        customer = this.customers.ensureForUser(user);
         if (customer == null) {
             customerId = this.customers.createGuestCustomer(
                     name, email, phone, country, Integer.valueOf(user.uid()));
@@ -150,6 +150,11 @@ public class BookingService {
         if (requests.length() > 1000 || country.length() > 80) {
             throw ApiException.badRequest("Booking details are too long");
         }
+        String pickup = RequestValues.optionalText(body, "pickupPlace");
+        if (pickup.length() > 240) throw ApiException.badRequest("Pickup place is too long");
+        values.put("pickupPlace", pickup);
+        values.put("packageAmount", quote.get("packageCost"));
+        values.put("vehicleAmount", quote.get("vehicleCost"));
         values.put("specialRequests", requests);
         values.put("totalAmount", quote.get("total"));
         values.put("status", status);
@@ -283,7 +288,8 @@ public class BookingService {
         bookings.lockVehicle(vehicleId);
         Vehicle vehicle = vehicles.requireVehicle(vehicleId);
         // A paid booking can move only if the new quote keeps the same total.
-        double total = Booking.quote(item, vehicle, guests).get("total");
+        Map<String, Double> quote = Booking.quote(item, vehicle, guests);
+        double total = quote.get("total");
         Map<String, Object> payment = payments.paymentForBooking(id);
         if (payment != null && "PAID".equals(payment.get("status"))
                 && Double.compare(total, ((Number) row.get("totalAmount")).doubleValue()) != 0) {
@@ -297,7 +303,10 @@ public class BookingService {
         if (requests.length() > 1000) {
             throw ApiException.badRequest("Special requests are too long");
         }
-        bookings.edit(id, date, slot, guests, requests, total);
+        String pickup = body.containsKey("pickupPlace")
+                ? RequestValues.optionalText(body, "pickupPlace") : java.util.Objects.toString(row.get("pickupPlace"), "");
+        if (pickup.length() > 240) throw ApiException.badRequest("Pickup place is too long");
+        bookings.edit(id, date, slot, guests, requests, total, pickup, quote.get("packageCost"), quote.get("vehicleCost"));
         return detailedByReference(row.get("reference").toString());
     }
 

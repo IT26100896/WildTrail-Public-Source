@@ -1,14 +1,16 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { PackageDTO } from "@/types/domain";
 import type { VehicleDTO } from "@/types/domain";
 import type { BookingDetail, PaymentDetail } from "@/types/domain";
 import { api } from "@/lib/api";
 import { fmtDate, fmtTime, money } from "@/lib/content";
 import Link from "next/link";
-import { SAMPLE_REVIEWS } from "@/lib/sample-reviews";
+import type { ReviewRow } from "@/types/domain";
+import PaymentSummary, { paymentDate } from "@/components/client/PaymentSummary";
+import ReviewReplies from "@/components/client/ReviewReplies";
 
 // ---------------------------------------------------------------- shared UI
 const BADGE: Record<string, string> = {
@@ -227,6 +229,7 @@ export function VehiclesManager({ initial }: { initial: VehicleDTO[] }) {
   const [edit, setEdit] = useState<VehicleDTO | "new" | null>(null);
   const fields: Field[] = [
     { name: "name", label: "Vehicle name", full: true },
+    { name: "registrationNumber", label: "Vehicle number (registration plate)", full: true },
     { name: "category", label: "Category", type: "select", options: [["STANDARD", "Standard Safari Jeep"], ["HILUX", "Toyota Hilux Safari Jeep"], ["LUXURY", "Luxury Jeep"], ["FAMILY", "Family Safari Jeep"]] },
     { name: "capacity", label: "Capacity (seats)", type: "number" },
     { name: "price", label: "Hire price per safari (USD)", type: "number", step: "0.01" },
@@ -237,8 +240,8 @@ export function VehiclesManager({ initial }: { initial: VehicleDTO[] }) {
   ];
   const init = (v?: VehicleDTO): FormValues =>
     v
-      ? { name: v.name, category: v.category, capacity: v.capacity, price: v.price, imageUrl: v.imageUrl, features: v.features.join(", "), fourByFour: v.fourByFour, available: v.available }
-      : { name: "", category: "STANDARD", capacity: 6, price: 40, imageUrl: "", features: "", fourByFour: true, available: true };
+      ? { name: v.name, registrationNumber: v.registrationNumber ?? "", category: v.category, capacity: v.capacity, price: v.price, imageUrl: v.imageUrl, features: v.features.join(", "), fourByFour: v.fourByFour, available: v.available }
+      : { name: "", registrationNumber: "", category: "STANDARD", capacity: 6, price: 40, imageUrl: "", features: "", fourByFour: true, available: true };
   return (
     <>
       <PageHeader title="Vehicles" sub={`${list.length} vehicles in the fleet`} action={<button className="a-btn" onClick={() => setEdit("new")}>+ New vehicle</button>} />
@@ -251,7 +254,7 @@ export function VehiclesManager({ initial }: { initial: VehicleDTO[] }) {
                 <div><p className="text-[11px] font-semibold uppercase text-slate-400">{v.categoryLabel}</p><p className="font-semibold text-slate-900">{v.name}</p></div>
                 <Badge s={v.available ? "ACTIVE" : "INACTIVE"} />
               </div>
-              <p className="mt-1 text-sm text-slate-500">{v.capacity} seats · {v.fourByFour ? "4x4" : "2WD"} · <b className="text-slate-800">{money(v.price)}</b></p>
+              <p className="mt-1 text-sm text-slate-500">Vehicle number: {v.registrationNumber ?? "Pending assignment"}<br />{v.capacity} seats · {v.fourByFour ? "4x4" : "2WD"} · <b className="text-slate-800">{money(v.price)}</b></p>
               <p className="mt-2 line-clamp-2 text-xs text-slate-500">{v.allFeatures.join(" · ")}</p>
               <div className="mt-4 flex gap-2"><button className="a-btn-light flex-1 justify-center" onClick={() => setEdit(v)}>Edit</button><button className="a-btn-danger" onClick={() => remove(v.id, v.name)}>Delete</button></div>
             </div>
@@ -279,7 +282,7 @@ export function GuidesManager({ initial, bookings, initialAssignments }: { initi
   const fields: Field[] = [{ name: "fullName", label: "Guide name" }, { name: "phone", label: "Phone" }, { name: "licenseNumber", label: "Licence number" }, { name: "specialty", label: "Specialty", type: "select", options: [["DRIVER", "Driver"], ["NATURALIST", "Naturalist"]] }, { name: "available", label: "Available for assignments", type: "checkbox" }];
   return <><PageHeader title="Guides & resource schedules" sub="Register licensed staff and review vehicle departures." action={<button className="a-btn" onClick={() => setEdit("new")}>+ New guide</button>} /><Table head={["Name", "Phone", "Licence", "Role", "Status", "Actions"]} empty={!list.length}>{list.map(g => <tr key={g.id}><td className="p-4">{g.fullName}</td><td>{g.phone}</td><td>{g.licenseNumber}</td><td>{g.assignmentRole}</td><td><Badge s={g.available ? "ACTIVE" : "INACTIVE"} /></td><td><button className="a-btn-light mr-2" onClick={() => setEdit(g)}>Edit</button><button className="a-btn-danger" onClick={() => remove(g.id, g.fullName)}>Delete</button></td></tr>)}</Table>
   <h2 className="my-6 text-xl font-semibold">Assign or reassign a guide</h2><form onSubmit={assign} className="mb-6 flex flex-wrap items-end gap-3"><div className="min-w-0 max-w-full"><label htmlFor="assignment-booking" className="a-label">Active booking</label><select id="assignment-booking" className="a-input max-w-full" required value={bookingId} onChange={e => setBookingId(Number(e.target.value))}><option value={0} disabled>Select booking</option>{bookings.filter(b => ["PENDING", "CONFIRMED"].includes(b.status)).map(b => <option key={b.id} value={b.id}>{b.reference} · {fmtDate(b.safariDate)}</option>)}</select></div><div><label htmlFor="assignment-guide" className="a-label">Guide</label><select id="assignment-guide" className="a-input" required value={guideId} onChange={e => setGuideId(Number(e.target.value))}><option value={0} disabled>Select guide</option>{list.filter(g => g.available).map(g => <option key={g.id} value={g.id}>{g.fullName}</option>)}</select></div><button disabled={assigning || !bookingId || !guideId} className="a-btn">Assign guide</button></form>
-  <h2 className="my-6 text-xl font-semibold">Vehicle departure schedule</h2><p className="mb-4 text-sm text-slate-500">Each guide can lead one safari per day.</p><Table head={["Reference", "Date", "Time", "Vehicle", "Guide", "Status"]} empty={!bookings.filter(b => b.status !== "CANCELLED").length}>{bookings.filter(b => b.status !== "CANCELLED").map(b => <tr key={b.id}><td className="p-4">{b.reference}</td><td>{fmtDate(b.safariDate)}</td><td>{fmtTime(b.timeSlot)}</td><td>{b.vehicleName}</td><td>{list.find(g => g.id === assignments.find(a => a.bookingId === b.id)?.guideId)?.fullName ?? "Unassigned"}</td><td><Badge s={b.status} /></td></tr>)}</Table>
+  <h2 className="my-6 text-xl font-semibold">Vehicle departure schedule</h2><p className="mb-4 text-sm text-slate-500">Each guide can lead one safari per day.</p><Table head={["Reference", "Date", "Time", "Vehicle", "Guide", "Status"]} empty={!bookings.filter(b => b.status !== "CANCELLED").length}>{bookings.filter(b => b.status !== "CANCELLED").map(b => <tr key={b.id}><td className="p-4">{b.reference}</td><td>{fmtDate(b.safariDate)}</td><td>{fmtTime(b.timeSlot)}</td><td>{b.vehicleName}<p className="text-xs text-slate-500">{b.vehicleNumber ?? "Pending assignment"}</p></td><td>{list.find(g => g.id === assignments.find(a => a.bookingId === b.id)?.guideId)?.fullName ?? "Unassigned"}</td><td><Badge s={b.status} /></td></tr>)}</Table>
   {edit && <FormModal title={edit === "new" ? "Register guide" : "Edit guide"} fields={fields} initial={edit === "new" ? { fullName: "", phone: "", licenseNumber: "", specialty: "DRIVER", available: true } : { fullName: edit.fullName, phone: edit.phone, licenseNumber: edit.licenseNumber, specialty: edit.specialty, available: edit.available }} onClose={() => setEdit(null)} onSubmit={async v => { await save(edit === "new" ? null : edit.id, v); setEdit(null); }} />}<Toast msg={toast.msg} onClose={toast.clear} /></>;
 }
 
@@ -388,10 +391,10 @@ export function BookingsManager({ initial }: { initial: BookingDetail[] }) {
         {rows.map((b) => (
           <tr key={b.id} className="hover:bg-slate-50">
             <td className="px-4 py-3 font-mono text-xs"><button className="text-jungle-800 underline" onClick={() => setView(b)}>{b.reference}</button></td>
-            <td className="px-4 py-3"><p className="font-medium">{b.customerName}</p><p className="text-xs text-slate-500">{b.customerEmail}</p></td>
+            <td className="px-4 py-3"><p className="font-medium">{b.customerName}</p><p className="text-xs text-slate-500">{b.customerEmail}</p><p className="text-xs text-gold-dark">{b.customerRole === "ROLE_ADMIN" ? "Administrator" : "Customer"}</p></td>
             <td className="px-4 py-3"><p>{b.packageName}</p><p className="text-xs text-slate-500">{b.destinationName}</p></td>
             <td className="whitespace-nowrap px-4 py-3">{fmtDate(b.safariDate)}<p className="text-xs text-slate-500">{fmtTime(b.timeSlot)}</p></td>
-            <td className="px-4 py-3">{b.vehicleName}</td>
+            <td className="px-4 py-3">{b.vehicleName}<p className="text-xs text-slate-500">{b.vehicleNumber ?? "Pending assignment"}</p></td>
             <td className="px-4 py-3">{b.guests}</td>
             <td className="px-4 py-3 font-medium">{money(b.totalAmount)}</td>
             <td className="px-4 py-3"><span className="text-xs text-slate-500">{b.paymentMethod}</span> <Badge s={b.paymentStatus} /></td>
@@ -407,13 +410,14 @@ export function BookingsManager({ initial }: { initial: BookingDetail[] }) {
       </Table>
       {view && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setView(null)}>
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between"><h2 className="font-mono text-lg font-semibold">{view.reference}</h2><Badge s={view.status} /></div>
             <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              {[["Customer", view.customerName], ["Email", view.customerEmail], ["Phone", view.customerPhone ?? "—"], ["Destination", view.destinationName], ["Package", view.packageName], ["Vehicle", view.vehicleName], ["Date", `${fmtDate(view.safariDate)} ${fmtTime(view.timeSlot)}`], ["Guests", String(view.guests)], ["Total", money(view.totalAmount)], ["Payment", `${view.paymentMethod} · ${view.paymentStatus}`], ["Transaction", view.transactionRef ?? "—"], ["Booked", fmtDate(view.createdAt)]].map(([k, v]) => (
+              {[["Customer", view.customerName], ["Email", view.customerEmail], ["Phone", view.customerPhone ?? "—"], ["Destination", view.destinationName], ["Package", view.packageName], ["Vehicle", view.vehicleName], ["Vehicle number", view.vehicleNumber ?? "Pending assignment"], ["Pickup place", view.pickupPlace ?? "Not specified"], ["Account type", view.customerRole === "ROLE_ADMIN" ? "Administrator" : "Customer"], ["Date", `${fmtDate(view.safariDate)} ${fmtTime(view.timeSlot)}`], ["Guests", String(view.guests)], ["Total", money(view.totalAmount)], ["Payment", `${view.paymentMethod} · ${view.paymentStatus}`], ["Transaction", view.transactionRef ?? "—"], ["Booked", fmtDate(view.createdAt)]].map(([k, v]) => (
                 <div key={k}><dt className="text-xs text-slate-500">{k}</dt><dd className="font-medium break-words">{v}</dd></div>
               ))}
             </dl>
+            <PaymentSummary booking={view} />
             {view.specialRequests && <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm"><b>Requests:</b> {view.specialRequests}</p>}
             <button className="a-btn mt-5 w-full justify-center" onClick={() => setView(null)}>Close</button>
           </div>
@@ -453,21 +457,23 @@ export function PaymentsManager({ initial }: { initial: PaymentDetail[] }) {
           <option value="CARD">Card only</option><option value="CASH">Cash only</option>
         </select>
       } />
+      <h2 className="mb-3 text-lg font-semibold">Payment summary</h2>
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         {[["Collected", totals.paid, "text-emerald-700"], ["Awaiting cash", totals.pending, "text-amber-700"], ["Refunded", totals.refunded, "text-violet-700"]].map(([l, v, c]) => (
           <div key={l as string} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs uppercase text-slate-500">{l}</p><p className={`mt-1 text-2xl font-semibold ${c}`}>{money(v as number)}</p></div>
         ))}
       </div>
-      <Table head={["Transaction", "Booking", "Customer", "Method", "Amount", "Status", "Paid at", ""]} empty={!rows.length}>
+      <h2 className="mb-3 text-lg font-semibold">Payment details</h2>
+      <Table head={["Transaction", "Booking / pickup", "Customer", "Method", "Amount", "Status", "Payment date", ""]} empty={!rows.length}>
         {rows.map((p) => (
           <tr key={p.id} className="hover:bg-slate-50">
             <td className="px-4 py-3 font-mono text-xs">{p.transactionRef}</td>
-            <td className="px-4 py-3 font-mono text-xs">{p.bookingReference}</td>
-            <td className="px-4 py-3">{p.customerName}</td>
+            <td className="px-4 py-3 font-mono text-xs">{p.bookingReference}<p className="mt-1 font-sans text-xs text-slate-500">{p.vehicleNumber ?? "Vehicle number pending"}<br />{p.pickupPlace ?? "Pickup not specified"}</p></td>
+            <td className="px-4 py-3">{p.customerName}<p className="text-xs text-slate-500">{p.customerEmail}</p><p className="text-xs text-gold-dark">{p.customerRole === "ROLE_ADMIN" ? "Administrator" : "Customer"}</p></td>
             <td className="px-4 py-3">{p.method === "CARD" ? `💳 •••• ${p.cardLast4 ?? ""}` : "💵 Cash"}</td>
             <td className="px-4 py-3 font-medium">{money(p.amount)}</td>
             <td className="px-4 py-3"><Badge s={p.status} /></td>
-            <td className="px-4 py-3 text-slate-500">{p.paidAt ? fmtDate(p.paidAt) : "—"}</td>
+            <td className="px-4 py-3 text-slate-500">{paymentDate(p.paidAt)}</td>
             <td className="whitespace-nowrap px-4 py-3 text-right">
               {p.status === "PENDING" && <button className="a-btn-light mr-1.5" onClick={() => change(p, "PAID")}>Mark paid</button>}
               {p.status === "PAID" && <button className="a-btn-danger" onClick={() => change(p, "REFUNDED")}>Refund</button>}
@@ -483,89 +489,52 @@ export function PaymentsManager({ initial }: { initial: PaymentDetail[] }) {
 }
 
 // ================================================================ Reviews
-export interface ReviewAdminItem { id: number; authorName: string; country: string | null; rating: number; comment: string; approved: boolean; createdAt: string; isSample?: boolean }
-
-const SAMPLE_REVIEWS_STORAGE_KEY = "wildtrail.admin.sample-reviews.v1";
-const DEFAULT_SAMPLE_REVIEWS: ReviewAdminItem[] = SAMPLE_REVIEWS.map(({ sample: _sample, ...review }) => ({ ...review, approved: false, isSample: true }));
-let cachedSampleReviews = DEFAULT_SAMPLE_REVIEWS;
-let cachedSampleReviewsRaw: string | null = null;
-function subscribeSampleReviews(onChange: () => void) {
-  window.addEventListener("wildtrail-sample-reviews-change", onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener("wildtrail-sample-reviews-change", onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-function getSampleReviewsSnapshot() {
-  try {
-    const raw = window.localStorage.getItem(SAMPLE_REVIEWS_STORAGE_KEY);
-    if (raw === cachedSampleReviewsRaw) return cachedSampleReviews;
-    cachedSampleReviewsRaw = raw;
-    cachedSampleReviews = raw ? JSON.parse(raw) as ReviewAdminItem[] : DEFAULT_SAMPLE_REVIEWS;
-  } catch { return cachedSampleReviews; }
-  return cachedSampleReviews;
-}
-function saveSampleReviewsSnapshot(next: ReviewAdminItem[]) {
-  cachedSampleReviews = next;
-  try {
-    cachedSampleReviewsRaw = JSON.stringify(next);
-    window.localStorage.setItem(SAMPLE_REVIEWS_STORAGE_KEY, cachedSampleReviewsRaw);
-  } catch { cachedSampleReviewsRaw = null; }
-  window.dispatchEvent(new Event("wildtrail-sample-reviews-change"));
-}
+export type ReviewAdminItem = ReviewRow;
 
 export function ReviewsManager({ initial }: { initial: ReviewAdminItem[] }) {
   const [list, setList] = useState(initial);
-  const samples = useSyncExternalStore(subscribeSampleReviews, getSampleReviewsSnapshot, () => DEFAULT_SAMPLE_REVIEWS);
-  const [tab, setTab] = useState<"all" | "pending" | "approved" | "samples">("all");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [draft, setDraft] = useState({ authorName: "", rating: 5, comment: "" });
+  const [tab, setTab] = useState<"all" | "customers" | "admins" | "samples">("all");
+  const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState(false);
   const toast = useToast();
-  const saveSamples = saveSampleReviewsSnapshot;
-  const realRows = list.filter((r) => tab === "pending" ? !r.approved : tab === "approved" ? r.approved : tab === "samples" ? false : true);
-  const rows = tab === "samples" ? samples : tab === "all" ? [...realRows, ...samples] : realRows;
+  const rows = list.filter(review => {
+    const category = tab === "all" || (tab === "samples" ? review.sample
+      : !review.sample && review.authorRole === (tab === "admins" ? "ROLE_ADMIN" : "ROLE_CUSTOMER"));
+    return category && `${review.authorName} ${review.authorEmail ?? ""} ${review.comment}`.toLowerCase().includes(query.toLowerCase());
+  });
   const reload = async () => setList(await api<ReviewAdminItem[]>("/api/reviews?all=1"));
-  const act = async (fn: () => Promise<unknown>, msg: string) => {
-    try {
-      await fn();
-      await reload();
-      toast.show(true, msg);
-    } catch (e) {
-      toast.show(false, (e as Error).message);
-    }
-  };
-  return (
-    <>
-      <PageHeader title="Reviews" sub={`${list.filter((r) => !r.approved).length} awaiting moderation · ${samples.length} sample reviews`} action={
-        <div className="flex rounded-lg border border-slate-300 bg-white p-0.5 text-sm">
-          {(["all", "pending", "approved", "samples"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`rounded-md px-3 py-1.5 capitalize ${tab === t ? "bg-jungle-800 text-white" : "text-slate-600"}`}>{t}</button>)}
+  async function remove(id: number) {
+    if (busy || !confirm("Delete this review from the website? Its replies will also be removed.")) return;
+    setBusy(true);
+    try { await api(`/api/reviews/${id}`, "DELETE"); await reload(); toast.show(true, "Review deleted"); }
+    catch (error) { toast.show(false, (error as Error).message); }
+    finally { setBusy(false); }
+  }
+  return <>
+    <PageHeader title="Reviews" sub={`${list.filter(review => !review.sample).length} published reviews · ${list.filter(review => review.sample).length} samples`} action={
+      <div className="flex flex-wrap gap-2">
+        <Search value={query} onChange={setQuery} placeholder="Name, email or review…" />
+        <div className="flex flex-wrap rounded-lg border border-slate-300 bg-white p-0.5 text-sm">
+          {(["all", "customers", "admins", "samples"] as const).map(value => <button key={value} onClick={() => setTab(value)} className={`rounded-md px-3 py-1.5 capitalize ${tab === value ? "bg-jungle-800 text-white" : "text-slate-600"}`}>{value}</button>)}
         </div>
-      } />
-      {tab === "samples" && <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">These are fictional demonstration reviews. Changes here are saved in this browser only and do not affect customer reviews.</p>}
-      <div className="grid gap-4 md:grid-cols-2">
-        {rows.map((r) => (
-          <div key={r.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div><p className="font-semibold">{r.authorName}</p><p className="text-xs text-slate-500">{r.country ?? "—"} · {fmtDate(r.createdAt)}</p></div>
-              <div className="text-right"><p className="text-amber-500">{"★".repeat(r.rating)}<span className="text-slate-200">{"★".repeat(5 - r.rating)}</span></p>{r.isSample ? <span className="inline-block rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">SAMPLE · NOT SUBMITTED</span> : <Badge s={r.approved ? "APPROVED" : "PENDING"} />}</div>
-            </div>
-            {r.isSample && editingId === r.id ? <div className="mt-3 space-y-2">
-              <label className="block text-xs font-medium text-slate-600">Display name<input className="a-input mt-1 w-full" value={draft.authorName} onChange={(e) => setDraft({ ...draft, authorName: e.target.value })} /></label>
-              <label className="block text-xs font-medium text-slate-600">Rating<select className="a-input mt-1 w-full" value={draft.rating} onChange={(e) => setDraft({ ...draft, rating: Number(e.target.value) })}>{[5,4,3,2,1].map((n) => <option key={n} value={n}>{n} stars</option>)}</select></label>
-              <label className="block text-xs font-medium text-slate-600">Review<textarea className="a-input mt-1 w-full" rows={3} value={draft.comment} onChange={(e) => setDraft({ ...draft, comment: e.target.value })} /></label>
-              <div className="flex gap-2"><button className="a-btn" onClick={() => { const authorName = draft.authorName.trim(); const comment = draft.comment.trim(); if (!authorName || !comment) { toast.show(false, "Name and review text are required"); return; } saveSamples(samples.map((item) => item.id === r.id ? { ...item, authorName, rating: draft.rating, comment } : item)); setEditingId(null); toast.show(true, "Sample review updated in this browser"); }}>Save</button><button className="a-btn-light" onClick={() => setEditingId(null)}>Cancel</button></div>
-            </div> : <p className="mt-3 text-sm text-slate-600">{r.comment}</p>}
-            {r.isSample ? editingId !== r.id && <div className="mt-4 flex gap-2"><button className="a-btn-light" onClick={() => { setDraft({ authorName: r.authorName, rating: r.rating, comment: r.comment }); setEditingId(r.id); }}>Edit</button><button className="a-btn-danger" onClick={() => { if (!confirm("Delete this sample review from this browser?")) return; saveSamples(samples.filter((item) => item.id !== r.id)); toast.show(true, "Sample review deleted from this browser"); }}>Delete</button></div> : <div className="mt-4 flex gap-2">
-              {r.approved ? <button className="a-btn-light" onClick={() => act(() => api(`/api/reviews/${r.id}`, "PATCH", { approved: false }), "Review hidden")}>Hide</button> : <button className="a-btn" onClick={() => act(() => api(`/api/reviews/${r.id}`, "PATCH", { approved: true }), "Review approved")}>Approve</button>}
-              <button className="a-btn-danger" onClick={() => confirm("Delete this review?") && act(() => api(`/api/reviews/${r.id}`, "DELETE"), "Review deleted")}>Delete</button>
-            </div>}
-          </div>
-        ))}
-        {!rows.length && <p className="col-span-full rounded-xl bg-white p-10 text-center text-sm text-slate-400">No reviews here.</p>}
       </div>
-      <Toast msg={toast.msg} onClose={toast.clear} />
-    </>
-  );
+    } />
+    <p className="mb-5 text-sm text-slate-600">Reviews appear immediately. Administrators can reply or delete a review.</p>
+    <div className="grid gap-4 md:grid-cols-2">
+      {rows.map(review => <article key={review.id} className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0"><p className="break-words font-semibold">{review.authorName}</p>
+            <p className="break-all text-xs text-slate-500">{review.authorEmail ?? "Fictional sample"}</p>
+            <p className="text-xs text-slate-500">{review.sample ? "Sample" : review.authorRole === "ROLE_ADMIN" ? "Administrator" : "Customer"} · {fmtDate(review.createdAt)}</p>
+          </div>
+          <span className="shrink-0 text-amber-500">{"★".repeat(review.rating)}</span>
+        </div>
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm text-slate-600">{review.comment}</p>
+        <ReviewReplies reviewId={review.id} replies={review.replies} canReply onChange={reload} />
+        <button disabled={busy} className="a-btn-danger mt-4" onClick={() => remove(review.id)}>Delete review</button>
+      </article>)}
+      {!rows.length && <p className="col-span-full rounded-xl bg-white p-10 text-center text-sm text-slate-400">No reviews here.</p>}
+    </div>
+    <Toast msg={toast.msg} onClose={toast.clear} />
+  </>;
 }
-

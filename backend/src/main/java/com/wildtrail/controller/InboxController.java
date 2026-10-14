@@ -7,5 +7,5 @@ import org.springframework.web.bind.annotation.*;
 public class InboxController {
     private final JdbcTemplate jdbc;
     public InboxController(JdbcTemplate jdbc){this.jdbc=jdbc;}
-    @GetMapping("/api/admin/messages")public List<Map<String,Object>> all(){return jdbc.queryForList("SELECT id,name,email,phone,message,created_at AS \"createdAt\" FROM contact_messages ORDER BY created_at DESC");}
+    @GetMapping("/api/admin/messages")public List<Map<String,Object>> all(){return jdbc.queryForList("SELECT id,name,email,phone,message,sender_role AS \"senderRole\",created_at AS \"createdAt\" FROM contact_messages ORDER BY created_at DESC");}
 }
