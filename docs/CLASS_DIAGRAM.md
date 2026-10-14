@@ -22,6 +22,7 @@ classDiagram
   PaymentProcessor <|.. Payment
   Payment <|-- CashPayment
   Payment <|-- CardPayment
+  Payment <|-- DemoCardPayment
   PaymentFactory ..> Payment
   AuthService --> User
   CustomerService --> Customer
@@ -76,3 +77,5 @@ classDiagram
 ```
 
 The diagram can be rendered by Mermaid-capable Markdown viewers. Customer ownership, booking/payment records, and guide assignments are linked through the repositories and SQL schema; guide details are handled by `FileGuideRepository` in `resources.txt`. Data ownership is explained in [the technical overview](TECHNICAL_OVERVIEW.md).
+
+The domain diagram focuses on Java behavior rather than every SQL field. Booking persistence additionally stores pickup place and the original safari/vehicle price split. Vehicle persistence stores registration and private owner metadata; administrator-only response mapping keeps owner contact/address/ID out of public vehicle data. Payment history joins the booking with its recorded collection date. Review replies are stored in SQL and exposed through `ReviewService`; these additions do not introduce separate domain subclasses. See [current feature behavior and source links](ACCOUNT_BOOKING_REVIEWS.md).

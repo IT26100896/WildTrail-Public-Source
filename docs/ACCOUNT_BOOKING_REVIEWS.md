@@ -6,7 +6,7 @@ An administrator can open the website through the console logo or **View website
 
 - **Pickup place** is a separate booking field, collected in the details step and shown in confirmation, booking history, staff booking details and the printable statement.
 - **Vehicle number** is the registration plate recorded under **Admin → Vehicles → Edit**. Existing vehicles without a plate show **Pending assignment**.
-- **Vehicle owner details** include full name, telephone number, address and ID/NIC. Administrators can add/edit them in the fleet form and expand **Owner details (admin only)** on the vehicle card. Public vehicle APIs and pages exclude these details. Old records can remain empty; updates from older clients preserve omitted owner fields.
+- **Vehicle owner details** include full name, telephone number, address and ID/NIC. Administrators can add/edit them in the fleet form and expand **Owner details (admin only)** on the vehicle card. Public vehicle APIs and pages exclude these details. Old records can remain empty; updates from older clients preserve omitted owner fields. An explicit blank clears an owner field. Deleting an unused vehicle removes its metadata; the existing booking-history deletion restriction still applies.
 - **Payment summary** shows the saved safari cost, vehicle hire, total and recorded payment amount. Existing bookings without a saved cost breakdown show **Included in total**, without recalculating historical prices.
 - **Payment details** include method, status and transaction reference. **My Payments** contains the signed-in account's payment history.
 - **Payment date** comes from the actual collection timestamp. Pending payments show **Not paid yet**. A campus card demonstration remains pending and charges no money.
@@ -26,10 +26,11 @@ Fictional samples are stored in SQL, visibly labeled, and can be deleted from th
 - [Personal payments page](../src/app/client/payments/page.tsx) and [receipt page](../src/app/client/receipts/%5Bid%5D/page.tsx)
 - [Website sessions](../src/lib/session.ts), [navigation](../src/components/client/Navbar.tsx) and [profile API](../backend/src/main/java/com/wildtrail/modules/users/ProfileController.java)
 - [Review API](../backend/src/main/java/com/wildtrail/modules/reviews/ReviewController.java), [review repository](../backend/src/main/java/com/wildtrail/modules/reviews/JdbcReviewRepository.java) and [reply component](../src/components/client/ReviewReplies.tsx)
+- [Vehicle API](../backend/src/main/java/com/wildtrail/modules/resources/VehicleController.java), [vehicle service](../backend/src/main/java/com/wildtrail/modules/resources/VehicleService.java), [vehicle repository](../backend/src/main/java/com/wildtrail/modules/resources/JdbcVehicleRepository.java) and [fleet form](../src/components/admin/managers.tsx)
 - [Schema and upgrade](../database/schema.sql)
 
 ## Verification
 
 Use Java 17 for `backend\mvnw.cmd -f backend\pom.xml verify`, then run `npm run typecheck`, `npm run lint` and `npm run build`.
 
-Browser checks require a disposable database and `QA_ALLOW_MUTATIONS=1`. Run `node qa/browser.mjs` and `node qa/account-booking-reviews.mjs`. Set `QA_CONFIG_PATH` to an ignored local JSON file containing the test administrator's credentials when the QA database uses separate accounts. These scripts create demonstration records and must not run against customer data.
+Browser checks require a disposable database and `QA_ALLOW_MUTATIONS=1`. Run `node qa/browser.mjs`, `node qa/account-booking-reviews.mjs` and `node qa/vehicle-owner.mjs`. Set `QA_CONFIG_PATH` to an ignored local JSON file containing the test administrator's credentials when the QA database uses separate accounts. These scripts create demonstration records and must not run against customer data.

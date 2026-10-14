@@ -7,7 +7,7 @@ Component: **User and Customer Management**
 
 ## Scope
 
-Administrator creation, protected accounts, login/logout, password changes and customer profile are part of this module.
+Administrator creation, protected accounts, login/logout, password changes and customer profile and shared administrator website identity are part of this module. Administrators can open View website, use their personal booking/payment/review pages and return through Admin account. Profile email/password changes require the current password; logout clears both role cookies. See [current account behavior](../../docs/ACCOUNT_BOOKING_REVIEWS.md).
 
 ## Java files to understand and develop
 
@@ -50,7 +50,7 @@ Administrator creation, protected accounts, login/logout, password changes and c
 
 ## Viva demonstration
 
-Register -> sign in -> update profile -> delete unused account; show administrator creation and role protection.
+Register -> sign in -> update profile -> delete unused account; show administrator creation and role protection, then View website → Admin account → Admin dashboard. Confirm that logout also signs out the website.
 
 ## Persistence and file handling
 

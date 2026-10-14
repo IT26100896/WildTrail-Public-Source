@@ -7,7 +7,7 @@ Component: **Guide and Vehicle Management**
 
 ## Scope
 
-Guide schedules, vehicle availability/maintenance fields, driver assignment and resources.txt file CRUD belong here.
+Guide schedules, vehicle availability/maintenance fields, registration number, private owner CRUD, driver assignment and resources.txt file CRUD belong here. See [vehicle ownership behavior](../../docs/ACCOUNT_BOOKING_REVIEWS.md) and the [vehicle owner browser checks](../../qa/vehicle-owner.mjs).
 
 ## Java files to understand and develop
 
@@ -29,7 +29,7 @@ Guide schedules, vehicle availability/maintenance fields, driver assignment and 
 
 Vehicle records include an optional registration number, managed through the vehicle editor and displayed in booking statements. Existing unnumbered vehicles display **Pending assignment**.
 
-The vehicle editor also stores owner name, telephone, address and ID/NIC. These fields are restricted to the administrator fleet view and excluded from public vehicle responses.
+The vehicle editor also stores owner name, telephone, address and ID/NIC. These fields are restricted to the administrator fleet view and excluded from public vehicle responses. Updates preserve omitted fields; an explicit blank clears a field. Deleting an unused vehicle removes its owner metadata, while booking history still restricts vehicle deletion.
 
 - [`src/app/client/vehicles/page.tsx`](../../src/app/client/vehicles/page.tsx)
 - [`src/app/admin/(panel)/vehicles/page.tsx`](../../src/app/admin/%28panel%29/vehicles/page.tsx)
@@ -43,7 +43,7 @@ The vehicle editor also stores owner name, telephone, address and ID/NIC. These 
 
 ## Viva demonstration
 
-Add guide/vehicle -> read -> update -> assign -> remove unused entry; restart to prove guide file persistence.
+Add a vehicle with registration and owner details → expand the private owner view → edit and reload → verify public pages omit owner metadata → clear an owner field or remove an unused vehicle. Add/read/update a guide, assign it and restart to prove guide file persistence.
 
 ## Persistence and file handling
 
