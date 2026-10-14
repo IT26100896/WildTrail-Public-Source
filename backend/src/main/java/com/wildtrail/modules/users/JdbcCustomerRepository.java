@@ -28,6 +28,24 @@ public class JdbcCustomerRepository {
         return rows.isEmpty() ? null : rows.get(0);
     }
 
+    /** An administrator keeps the same login while owning personal bookings and reviews. */
+    public Map<String, Object> ensureForUser(com.wildtrail.security.SessionUser user) {
+        // Serializing on the account prevents concurrent requests from creating two profiles.
+        jdbc.queryForObject("SELECT id FROM users WHERE id=? FOR UPDATE", Integer.class, user.uid());
+        Map<String, Object> profile = customerByUser(user.uid());
+        if (profile != null) return profile;
+        Map<String, Object> guest = customerByEmail(user.email());
+        if (guest != null) {
+            if (guest.get("userId") != null) {
+                throw com.wildtrail.exception.ApiException.conflict("This email is linked to another customer account");
+            }
+            jdbc.update("UPDATE customers SET user_id=?,full_name=? WHERE id=?", user.uid(), user.name(), guest.get("id"));
+        } else {
+            createGuestCustomer(user.name(), user.email(), "", "", user.uid());
+        }
+        return customerByUser(user.uid());
+    }
+
     public Map<String, Object> customerByEmail(String email) {
         List<Map<String, Object>> rows = this.jdbc.queryForList("SELECT id, user_id AS \"userId\", full_name AS \"fullName\", email, phone, country\nFROM customers WHERE lower(email)=lower(?)\n", new Object[]{email});
         return rows.isEmpty() ? null : rows.get(0);

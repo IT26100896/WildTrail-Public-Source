@@ -27,7 +27,16 @@ public class VehicleController {
     @GetMapping(value={"/vehicles"})
     public List<Map<String, Object>> vehicles(@RequestParam(defaultValue="0") String all, Authentication authentication) {
         boolean showAll = "1".equals(all) && this.isAdmin(authentication);
-        return this.catalog.vehicles(!showAll);
+        List<Map<String, Object>> vehicles = this.catalog.vehicles(!showAll);
+        if (showAll) return vehicles;
+        // Owner contact and identity information is restricted to the staff fleet view.
+        return vehicles.stream().map(vehicle -> {
+            Map<String, Object> publicVehicle = new java.util.LinkedHashMap<>(vehicle);
+            for (String field : List.of("ownerName", "ownerPhone", "ownerAddress", "ownerIdNumber")) {
+                publicVehicle.remove(field);
+            }
+            return publicVehicle;
+        }).toList();
     }
 
     @PostMapping(value={"/vehicles"})

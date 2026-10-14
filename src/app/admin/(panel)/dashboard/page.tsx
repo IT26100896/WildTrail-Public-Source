@@ -55,7 +55,7 @@ export default async function DashboardPage() {
               <li key={k} className="flex items-center justify-between"><span className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${statusColor[k]}`} />{k}</span><b>{v}</b></li>
             ))}
           </ul>
-          {s.pendingReviews > 0 && <Link href="/admin/reviews" className="mt-5 block rounded-lg bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">⭐ {s.pendingReviews} review(s) awaiting moderation →</Link>}
+          <Link href="/admin/reviews" className="mt-5 block rounded-lg bg-cream p-3 text-sm text-jungle-900 ring-1 ring-gold/30">⭐ {s.publishedReviews} published review(s) · View and reply →</Link>
         </section>
       </div>
 

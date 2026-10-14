@@ -37,6 +37,14 @@ public class VehicleService {
         if (!this.catalog.lockVehicle(id)) {
             throw ApiException.notFound("Vehicle with id " + id + " was not found");
         }
+        // Omitted metadata stays unchanged; explicitly empty fields clear the recorded value.
+        this.catalog.vehicles(false).stream()
+                .filter(row -> ((Number)row.get("id")).intValue() == id)
+                .findFirst().ifPresent(row -> {
+                    for (String field : List.of("registrationNumber", "ownerName", "ownerPhone", "ownerAddress", "ownerIdNumber")) {
+                        if (!body.containsKey(field)) values.put(field, row.get(field));
+                    }
+                });
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Colombo"));
         if (this.catalog.hasIncompatibleActiveBooking(
                 id, (int) values.get("capacity"), (boolean) values.get("available"), today)) {
@@ -69,6 +77,29 @@ public class VehicleService {
         }
         LinkedHashMap<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("name", RequestValues.text(body, "name", 120));
+        String number = RequestValues.optionalText(body, "registrationNumber").toUpperCase(java.util.Locale.ROOT);
+        if (number.length() > 32 || (!number.isBlank() && !number.matches("[A-Z0-9 -]+"))) {
+            throw ApiException.badRequest("Vehicle number must contain letters, numbers, spaces or hyphens (max 32 characters)");
+        }
+        result.put("registrationNumber", number.isBlank() ? null : number);
+        result.put("ownerName", optionalOwnerField(body, "ownerName", 120));
+        result.put("ownerAddress", optionalOwnerField(body, "ownerAddress", 300));
+        String phone = optionalOwnerField(body, "ownerPhone", 40);
+        if (phone != null) {
+            int digits = phone.replaceAll("[^0-9]", "").length();
+            if (!phone.matches("\\+?[0-9 ()-]+") || digits < 7 || digits > 15) {
+                throw ApiException.badRequest("Owner telephone number must contain 7 to 15 digits");
+            }
+        }
+        result.put("ownerPhone", phone);
+        String ownerId = optionalOwnerField(body, "ownerIdNumber", 40);
+        if (ownerId != null) {
+            ownerId = ownerId.toUpperCase(java.util.Locale.ROOT);
+            if (!ownerId.matches("[A-Z0-9][A-Z0-9 -]*")) {
+                throw ApiException.badRequest("Owner ID / NIC must contain letters, numbers, spaces or hyphens");
+            }
+        }
+        result.put("ownerIdNumber", ownerId);
         result.put("category", category);
         result.put("capacity", RequestValues.integer(body, "capacity", 1, 20));
         result.put("fourByFour", RequestValues.bool(body, "fourByFour", true));
@@ -77,5 +108,11 @@ public class VehicleService {
         result.put("price", RequestValues.nonNegative(body, "price"));
         result.put("imageUrl", RequestValues.text(body, "imageUrl", 2000));
         return result;
+    }
+
+    private String optionalOwnerField(Map<String, Object> body, String field, int maxLength) {
+        String value = RequestValues.optionalText(body, field);
+        if (value.length() > maxLength) throw ApiException.badRequest("Owner details are too long: " + field);
+        return value.isBlank() ? null : value;
     }
 }

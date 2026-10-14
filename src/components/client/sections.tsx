@@ -8,21 +8,14 @@ import type { DestinationDTO } from "@/types/domain";
 import { FAQ, GALLERY, IMG, STEPS, WHY, WILDLIFE } from "@/lib/content";
 import { SectionHeading } from "./ClientShell";
 import { DestinationCard, PackageCard, VehicleCard, WildlifeCard } from "./cards";
-import { SAMPLE_REVIEWS } from "@/lib/sample-reviews";
 import Hero from "./Hero";
 import { Faq, Gallery, ReviewCarousel, type ReviewItem } from "./interactive";
 import QuickBooking from "./QuickBooking";
 
 export async function loadPublicReviews(): Promise<ReviewItem[]> {
-  const reviews = (await backendApi<ReviewRow[]>("/api/reviews")).map((r) => ({
-    id: r.id,
-    authorName: r.authorName,
-    country: r.country,
-    rating: r.rating,
-    comment: r.comment,
-    createdAt: new Date(r.createdAt).toISOString(),
+  return (await backendApi<ReviewRow[]>("/api/reviews")).map((review) => ({
+    ...review, createdAt: new Date(review.createdAt).toISOString(),
   }));
-  return reviews.length ? reviews : SAMPLE_REVIEWS;
 }
 
 export function WhyChoose() {

@@ -3,16 +3,17 @@ import { Stars } from "@/components/client/cards";
 import { ReviewForm } from "@/components/client/forms";
 import { ReviewCarousel } from "@/components/client/interactive";
 import { loadPublicReviews } from "@/components/client/sections";
-import { getCustomerSession } from "@/lib/session";
+import { getWebsiteSession } from "@/lib/session";
 import { IMG, fmtDate } from "@/lib/content";
 import Link from "next/link";
+import ReviewReplies from "@/components/client/ReviewReplies";
 import MyReviews, { type MyReview } from "@/components/client/MyReviews";
 import { backendApi } from "@/lib/backend-api";
 
 export const metadata = { title: "Guest Reviews — WildTrail" };
 
 export default async function ReviewsPage() {
-  const [reviews, me] = await Promise.all([loadPublicReviews(), getCustomerSession()]);
+  const [reviews, me] = await Promise.all([loadPublicReviews(), getWebsiteSession()]);
   const realReviews = reviews.filter((r) => !r.sample);
   const avg = realReviews.length ? realReviews.reduce((s, r) => s + r.rating, 0) / realReviews.length : 0;
   const mine = me ? await backendApi<MyReview[]>("/api/reviews/mine") : [];
@@ -22,8 +23,8 @@ export default async function ReviewsPage() {
       <section className="bg-jungle-900 py-20">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
           <div className="mb-12 text-center text-white">
-            <p className="font-display text-6xl text-gold">{realReviews.length ? avg.toFixed(1) : "Sample stories"}</p>
-            <p className="mt-1 text-sm text-white/60">{realReviews.length ? `average from ${realReviews.length} published reviews` : "Fictional examples for the campus project; no customer ratings yet."}</p>
+            <p className="font-display text-6xl text-gold">{realReviews.length ? avg.toFixed(1) : reviews.length ? "Sample stories" : "No reviews yet"}</p>
+            <p className="mt-1 text-sm text-white/60">{realReviews.length ? `average from ${realReviews.length} published reviews` : reviews.length ? "Fictional examples for the campus project; no customer ratings yet." : "Be the first to share your safari experience."}</p>
           </div>
           <ReviewCarousel reviews={reviews} />
         </div>
@@ -38,12 +39,14 @@ export default async function ReviewsPage() {
                   <span className="grid h-12 w-12 place-items-center rounded-full bg-jungle-900 font-display text-gold">{r.authorName.split(" ").map((s) => s[0]).join("").slice(0, 2)}</span>
                   <div className="flex-1">
                     <p className="font-semibold text-jungle-950">{r.authorName}</p>
+                    {r.authorRole === "ROLE_ADMIN" && <p className="text-xs text-gold-dark">Administrator</p>}
                     {r.sample && <p className="text-xs text-gold-dark">Fictional sample review</p>}
                     <p className="text-xs text-charcoal/50">{r.country ?? "Traveller"} · {fmtDate(r.createdAt)}</p>
                   </div>
                   <Stars n={r.rating} />
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-charcoal/75">{r.comment}</p>
+                <ReviewReplies reviewId={r.id} replies={r.replies} canReply={me?.role === "ROLE_ADMIN"} />
               </article>
             ))}
           </div>

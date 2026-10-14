@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PackageDTO } from "@/types/domain";
 import type { BookingDetail } from "@/types/domain";
 import { api } from "@/lib/api";
 import { fmtDate, fmtTime, money } from "@/lib/content";
+import PaymentSummary from "./PaymentSummary";
 import { PackageCard } from "./cards";
 
 function Alert({ kind, children }: { kind: "error" | "success"; children: React.ReactNode }) {
@@ -75,7 +77,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       const r = await api<{ redirect: string }>(`/api/auth/${mode}`, "POST", f);
       const next = new URLSearchParams(window.location.search).get("next");
       // A full navigation discards prefetched pages from the previous signed-in role.
-      window.location.assign(r.redirect.startsWith("/admin") ? r.redirect : next && next.startsWith("/client/") ? next : r.redirect);
+      window.location.assign(next && next.startsWith("/client/") ? next : r.redirect);
     } catch (e) {
       setErr((e as Error).message);
       setBusy(false);
@@ -106,15 +108,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 }
 
 // ===================== Contact =====================
-export function ContactForm() {
-  const [f, setF] = useState({ name: "", email: "", phone: "", message: "" });
+export function ContactForm({ user }: { user?: { name: string; email: string } }) {
+  const [f, setF] = useState({ name: user?.name ?? "", email: user?.email ?? "", phone: "", message: "" });
   const [state, setState] = useState<{ ok?: boolean; msg?: string; busy?: boolean }>({});
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setState({ busy: true });
     try {
       await api("/api/contact", "POST", f);
-      setF({ name: "", email: "", phone: "", message: "" });
+      setF({ name: user?.name ?? "", email: user?.email ?? "", phone: "", message: "" });
       setState({ ok: true, msg: "Thank you! Your message has been recorded for our safari team." });
     } catch (e) {
       setState({ ok: false, msg: (e as Error).message });
@@ -124,8 +126,8 @@ export function ContactForm() {
     <form onSubmit={submit} className="space-y-4">
       {state.msg && <Alert kind={state.ok ? "success" : "error"}>{state.msg}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div><label htmlFor="name" className="label">Name</label><input id="name" className="input" required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
-        <div><label htmlFor="email" className="label">Email</label><input id="email" type="email" className="input" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
+        <div><label htmlFor="name" className="label">Name</label><input id="name" className="input" required readOnly={!!user} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
+        <div><label htmlFor="email" className="label">Email</label><input id="email" type="email" className="input" required readOnly={!!user} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
       </div>
       <div><label htmlFor="phone" className="label">Phone</label><input id="phone" className="input" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
       <div><label htmlFor="message" className="label">Message</label><textarea id="message" className="input min-h-36" required value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></div>
@@ -136,6 +138,7 @@ export function ContactForm() {
 
 // ===================== Review submission =====================
 export function ReviewForm({ defaultName }: { defaultName?: string }) {
+  const router = useRouter();
   const [f, setF] = useState({ authorName: defaultName ?? "", country: "", rating: 5, comment: "" });
   const [state, setState] = useState<{ ok?: boolean; msg?: string; busy?: boolean }>({});
   const submit = async (e: React.FormEvent) => {
@@ -145,6 +148,7 @@ export function ReviewForm({ defaultName }: { defaultName?: string }) {
       const r = await api<{ message: string }>("/api/reviews", "POST", f);
       setF({ ...f, comment: "" });
       setState({ ok: true, msg: r.message });
+      router.refresh();
     } catch (e) {
       setState({ ok: false, msg: (e as Error).message });
     }
@@ -153,7 +157,7 @@ export function ReviewForm({ defaultName }: { defaultName?: string }) {
     <form onSubmit={submit} className="space-y-4">
       {state.msg && <Alert kind={state.ok ? "success" : "error"}>{state.msg}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div><label htmlFor="your-name" className="label">Your name</label><input id="your-name" className="input" required value={f.authorName} onChange={(e) => setF({ ...f, authorName: e.target.value })} /></div>
+        <div><label htmlFor="your-name" className="label">Your name</label><input id="your-name" className="input" required readOnly value={f.authorName} onChange={(e) => setF({ ...f, authorName: e.target.value })} /></div>
         <div><label htmlFor="country" className="label">Country</label><input id="country" className="input" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })} /></div>
       </div>
       <div>
@@ -253,6 +257,7 @@ export function MyBookingsList({ initial }: { initial: BookingDetail[] }) {
               value={edit.specialRequests ?? ""}
               onChange={(e) => setEdit({ ...edit, specialRequests: e.target.value })} />
           </div>
+          <div className="sm:col-span-2"><label htmlFor="edit-pickup" className="label">Pickup place</label><input id="edit-pickup" className="input" maxLength={240} value={edit.pickupPlace ?? ""} onChange={event => setEdit({ ...edit, pickupPlace: event.target.value })} /></div>
           <p className="text-xs sm:col-span-2">
             Changes require 24 hours notice. Unpaid bookings are repriced; paid bookings must keep the same total.
           </p>
@@ -263,7 +268,7 @@ export function MyBookingsList({ initial }: { initial: BookingDetail[] }) {
         </form>
       )}
       {list.map((b) => (
-        <article key={b.id} className="card flex flex-col gap-5 p-6 md:flex-row md:items-center">
+        <article key={b.id} className="card grid gap-5 p-6 md:grid-cols-[auto_1fr_auto] md:items-center">
           <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-jungle-900 text-center text-gold">
             <div><p className="font-display text-2xl leading-none">{new Date(`${b.safariDate}T00:00:00`).getDate()}</p><p className="text-[10px] uppercase">{new Date(`${b.safariDate}T00:00:00`).toLocaleString("en", { month: "short" })}</p></div>
           </div>
@@ -283,6 +288,7 @@ export function MyBookingsList({ initial }: { initial: BookingDetail[] }) {
               <div><button onClick={() => setEdit(b)} className="mt-2 mr-4 text-xs font-semibold underline">Change booking</button><button onClick={() => cancel(b.id)} className="mt-2 text-xs font-semibold text-red-600 hover:underline">Cancel booking</button></div>
             )}
           </div>
+          <div className="md:col-span-3"><p className="text-sm">Vehicle number: {b.vehicleNumber ?? "Pending assignment"} · Pickup place: {b.pickupPlace ?? "Contact staff to arrange pickup"}</p><PaymentSummary booking={b} /></div>
         </article>
       ))}
     </div>

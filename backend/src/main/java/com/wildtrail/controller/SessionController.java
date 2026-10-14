@@ -13,12 +13,16 @@ public class SessionController {
     public SessionController(SessionCookieService cookies, JdbcTemplate jdbc) { this.cookies=cookies; this.jdbc=jdbc; }
     @GetMapping("/api/auth/me")
     public Map<String, ?> me(@RequestParam(defaultValue="client") String area, HttpServletRequest request) {
-        String role = area.equals("admin") ? "ROLE_ADMIN" : "ROLE_CUSTOMER";
-        SessionUser user = cookies.read(request, role);
-        if (user == null) return Map.of();
-        var rows = jdbc.queryForList("SELECT id,email,full_name AS \"name\",role FROM users WHERE id=? AND role=?", user.uid(), role);
-        if (rows.isEmpty()) return Map.of();
-        var row = rows.get(0);
-        return Map.of("uid",row.get("id"),"email",row.get("email"),"name",row.get("name"),"role",role,"exp",System.currentTimeMillis()+1000);
+        String[] roles = area.equals("website") ? new String[]{"ROLE_ADMIN", "ROLE_CUSTOMER"}
+                : new String[]{area.equals("admin") ? "ROLE_ADMIN" : "ROLE_CUSTOMER"};
+        for (String role : roles) {
+            SessionUser user = cookies.read(request, role);
+            if (user == null) continue;
+            var rows = jdbc.queryForList("SELECT id,email,full_name AS \"name\",role FROM users WHERE id=? AND role=?", user.uid(), role);
+            if (rows.isEmpty()) continue;
+            var row = rows.get(0);
+            return Map.of("uid",row.get("id"),"email",row.get("email"),"name",row.get("name"),"role",role,"exp",System.currentTimeMillis()+1000);
+        }
+        return Map.of();
     }
 }

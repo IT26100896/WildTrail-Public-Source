@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const NAV = [
+  { href: "/client/home", label: "View website", icon: "🌐" },
+  { href: "/client/profile", label: "My profile", icon: "⚙️" },
   { href: "/admin/accounts", label: "Administrators", icon: "🔐" },
   { href: "/admin/messages", label: "Contact inbox", icon: "✉️" },
   { href: "/admin/dashboard", label: "Dashboard", icon: "📊" },
@@ -44,10 +46,10 @@ export default function AdminSidebar({ name, email }: { name: string; email: str
       </header>
       {open && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setOpenPath(null)} />}
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-jungle-950 text-white transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="shrink-0 border-b border-white/10 px-6 py-5">
+        <Link href="/client/home" aria-label="WildTrail home" className="block shrink-0 border-b border-white/10 px-6 py-5">
           <p className="font-display text-xl font-bold tracking-[0.18em]">WILD<span className="text-gold">TRAIL</span></p>
           <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Admin console</p>
-        </div>
+        </Link>
         <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
           {NAV.map((n) => {
             const active = pathname.startsWith(n.href);

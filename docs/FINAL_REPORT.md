@@ -20,7 +20,7 @@ WildTrail is a web application for browsing Sri Lankan safari packages and manag
 | Bookings | Check availability; create, view, change, and cancel eligible bookings | SQL |
 | Guides and vehicles | Manage vehicles, guides, assignments, and schedules | SQL for vehicles and assignments; `resources.txt` for guides |
 | Payments | Track pending cash/card demonstration, record collection or refund, view receipts | SQL |
-| Reviews | Submit, moderate, edit, and delete reviews; manage contact inquiries | SQL |
+| Reviews | Publish reviews immediately, delete reviews, post administrator replies, and manage contact inquiries | SQL |
 
 The booking API calculates prices and validates dates, guest limits, availability, vehicle conflicts, ownership, and the 24-hour change/cancellation rule. Customers cannot directly change another customer's booking. Payment and booking updates use transactions. Vehicle and schedule locks protect concurrent changes. Historical records are restricted from deletion where removing them would break related bookings or payments.
 
@@ -47,7 +47,7 @@ Each local installation creates its own administrator credentials through `scrip
 3. Change or cancel an eligible booking and observe the server's availability and 24-hour checks.
 4. Sign in as staff to manage packages, vehicles, guides, bookings, payments, reviews, and contact messages.
 5. Create, read, update, and delete a sample guide, then inspect `resources.txt` and reload the guide list.
-6. Record a cash payment, view the receipt, and moderate a customer review.
+6. Record a cash payment, view the payment date and receipt, then reply to a published customer review.
 
 The [viva guide](VIVA_GUIDE.md) identifies the relevant Java classes, business rules, and demonstrations for each module.
 

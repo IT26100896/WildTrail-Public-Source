@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JdbcVehicleRepository {
     private static final String PACKAGE_SELECT = "SELECT p.id, p.name, p.package_type AS \"packageType\", p.destination_id AS \"destinationId\",\n       d.name AS \"destinationName\", p.duration_hours AS \"durationHours\", p.start_time AS \"startTime\",\n       p.max_guests AS \"maxGuests\", p.base_price AS \"basePrice\", p.description, p.image_url AS \"imageUrl\",\n       p.active\nFROM safari_packages p JOIN destinations d ON d.id = p.destination_id\n";
-    private static final String VEHICLE_SELECT = "SELECT id, name, category, capacity, four_by_four AS \"fourByFour\", features,\n       available, price, image_url AS \"imageUrl\"\nFROM vehicles\n";
+    private static final String VEHICLE_SELECT = "SELECT id, name, category, capacity, four_by_four AS \"fourByFour\", features,\n       available, price, registration_number AS \"registrationNumber\",\n       owner_name AS \"ownerName\", owner_phone AS \"ownerPhone\",\n       owner_address AS \"ownerAddress\", owner_id_number AS \"ownerIdNumber\", image_url AS \"imageUrl\"\nFROM vehicles\n";
     private final JdbcTemplate jdbc;
 
     public JdbcVehicleRepository(JdbcTemplate jdbc) {
@@ -23,21 +23,21 @@ public class JdbcVehicleRepository {
 
     public List<Map<String, Object>> vehicles(boolean availableOnly) {
         String sql = VEHICLE_SELECT + (availableOnly ? " WHERE available=TRUE" : "") + " ORDER BY id";
-        return this.jdbc.queryForList(sql).stream().map(row -> this.vehicleDto(this.vehicleModel((Map<String, Object>)row))).toList();
+        return this.jdbc.queryForList(sql).stream().map(row -> this.vehicleDto(row)).toList();
     }
 
     public Vehicle findVehicle(int id) {
-        List<Map<String, Object>> rows = this.jdbc.queryForList("SELECT id, name, category, capacity, four_by_four AS \"fourByFour\", features,\n       available, price, image_url AS \"imageUrl\"\nFROM vehicles\n WHERE id=?", new Object[]{id});
+        List<Map<String, Object>> rows = this.jdbc.queryForList("SELECT id, name, category, capacity, four_by_four AS \"fourByFour\", features,\n       available, price, registration_number AS \"registrationNumber\",\n       owner_name AS \"ownerName\", owner_phone AS \"ownerPhone\",\n       owner_address AS \"ownerAddress\", owner_id_number AS \"ownerIdNumber\", image_url AS \"imageUrl\"\nFROM vehicles\n WHERE id=?", new Object[]{id});
         return rows.isEmpty() ? null : this.vehicleModel(rows.get(0));
     }
 
     public Map<String, Object> createVehicle(Map<String, Object> values) {
-        Integer id = JdbcInsert.id(this.jdbc, "INSERT INTO vehicles(name, category, capacity, four_by_four, features, available, price, image_url)\nVALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id\n", new Object[]{values.get("name"), values.get("category"), values.get("capacity"), values.get("fourByFour"), values.get("features"), values.get("available"), values.get("price"), values.get("imageUrl")});
-        return this.vehicleDto(Objects.requireNonNull(this.findVehicle(Objects.requireNonNull(id))));
+        Integer id = JdbcInsert.id(this.jdbc, "INSERT INTO vehicles(name, category, capacity, four_by_four, features, available, price, image_url, registration_number,\n    owner_name, owner_phone, owner_address, owner_id_number)\nVALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id\n", new Object[]{values.get("name"), values.get("category"), values.get("capacity"), values.get("fourByFour"), values.get("features"), values.get("available"), values.get("price"), values.get("imageUrl"), values.get("registrationNumber"), values.get("ownerName"), values.get("ownerPhone"), values.get("ownerAddress"), values.get("ownerIdNumber")});
+        return vehicles(false).stream().filter(row -> ((Number)row.get("id")).intValue() == id).findFirst().orElseThrow();
     }
 
     public boolean updateVehicle(int id, Map<String, Object> values) {
-        return this.jdbc.update("UPDATE vehicles SET name=?, category=?, capacity=?, four_by_four=?, features=?, available=?,\n    price=?, image_url=?, updated_at=NOW() WHERE id=?\n", new Object[]{values.get("name"), values.get("category"), values.get("capacity"), values.get("fourByFour"), values.get("features"), values.get("available"), values.get("price"), values.get("imageUrl"), id}) > 0;
+        return this.jdbc.update("UPDATE vehicles SET name=?, category=?, capacity=?, four_by_four=?, features=?, available=?,\n    price=?, image_url=?, registration_number=?,\n    owner_name=?, owner_phone=?, owner_address=?, owner_id_number=?, updated_at=NOW() WHERE id=?\n", new Object[]{values.get("name"), values.get("category"), values.get("capacity"), values.get("fourByFour"), values.get("features"), values.get("available"), values.get("price"), values.get("imageUrl"), values.get("registrationNumber"), values.get("ownerName"), values.get("ownerPhone"), values.get("ownerAddress"), values.get("ownerIdNumber"), id}) > 0;
     }
 
     public boolean lockVehicle(int id) {
@@ -81,10 +81,16 @@ public class JdbcVehicleRepository {
         };
     }
 
-    private Map<String, Object> vehicleDto(Vehicle vehicle) {
+    private Map<String, Object> vehicleDto(Map<String, Object> row) {
+        Vehicle vehicle = vehicleModel(row);
         LinkedHashMap<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("id", vehicle.getId());
         result.put("name", vehicle.getName());
+        result.put("registrationNumber", row.get("registrationNumber"));
+        result.put("ownerName", row.get("ownerName"));
+        result.put("ownerPhone", row.get("ownerPhone"));
+        result.put("ownerAddress", row.get("ownerAddress"));
+        result.put("ownerIdNumber", row.get("ownerIdNumber"));
         result.put("capacity", vehicle.getCapacity());
         result.put("fourByFour", vehicle.isFourByFour());
         result.put("features", vehicle.getFeatures());

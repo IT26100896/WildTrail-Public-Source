@@ -2,11 +2,11 @@ import { chromium, expect } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import crypto from 'node:crypto';
 if(process.env.QA_ALLOW_MUTATIONS!=='1')throw Error('Disposable QA database required');
-const config=JSON.parse((await readFile('.local/config.json','utf8')).replace(/^\uFEFF/,''));
+const config=JSON.parse((await readFile(process.env.QA_CONFIG_PATH || '.local/config.json','utf8')).replace(/^\uFEFF/,''));
 const browser=await chromium.launch();const context=await browser.newContext({viewport:{width:1366,height:600}});const page=await context.newPage();const results=[];const errors=[];
 page.on('pageerror',e=>errors.push(e.message));
 const base='http://localhost:3000';
-async function go(path){await page.goto(base+path,{waitUntil:'networkidle'});}
+async function go(path){await page.goto(base+path,{waitUntil:'domcontentloaded'});}
 async function login(email,password){await go('/client/login');await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('Password',{exact:true}).fill(password);await page.getByRole('button',{name:'Sign in',exact:true}).click();}
 async function check(name,fn){await fn();results.push(name);console.log('PASS '+name);}
 try{

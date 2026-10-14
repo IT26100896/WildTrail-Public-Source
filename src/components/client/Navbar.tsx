@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import type { Role } from "@/types/domain";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 const LINKS = [
@@ -23,7 +24,7 @@ export function Logo({ light = true }: { light?: boolean }) {
   );
 }
 
-export default function Navbar({ userName }: { userName: string | null }) {
+export default function Navbar({ userName, userRole, userEmail }: { userName: string | null; userRole?: Role; userEmail?: string }) {
  const pathname=usePathname();
  const [scrolled,setScrolled]=useState(false);
  const [openPath,setOpenPath]=useState<string|null>(null);
@@ -44,7 +45,7 @@ export default function Navbar({ userName }: { userName: string | null }) {
  useEffect(()=>{const close=(e:KeyboardEvent)=>{if(e.key==="Escape"){setOpenPath(null);setDropdown(null);}};window.addEventListener("keydown",close);return()=>window.removeEventListener("keydown",close);},[]);
  async function logout(){setBusy(true);setError("");try{const response=await fetch("/api/auth/logout",{method:"POST"});if(!response.ok)throw new Error("Unable to sign out. Please try again.");window.location.replace("/client/login");}catch(e){setError((e as Error).message);setBusy(false);}}
  const linkClass=(href:string)=>`block whitespace-nowrap rounded-lg px-2 py-2 text-sm hover:bg-white/10 hover:text-gold ${pathname===href ? "text-gold" : "text-white/90"}`;
- const accountLinks=<><Link className={linkClass("/client/my-bookings")} href="/client/my-bookings">My Bookings</Link><Link className={linkClass("/client/my-reviews")} href="/client/my-reviews">My Reviews</Link><Link className={linkClass("/client/profile")} href="/client/profile">Profile</Link><button className="w-full rounded-lg px-3 py-2 text-left text-sm text-white hover:bg-white/10" disabled={busy} onClick={logout}>{busy?"Signing out…":"Sign out"}</button></>;
+ const accountLinks=<><div className="border-b border-white/10 px-2 pb-2 text-sm text-white"><p className="break-words font-semibold">{userName}</p><p className="break-all text-xs text-white/60">{userEmail}</p><p className="text-xs text-gold">{userRole === "ROLE_ADMIN" ? "Administrator" : "Customer"}</p></div>{userRole === "ROLE_ADMIN" && <Link className={linkClass("/admin/dashboard")} href="/admin/dashboard">Admin dashboard</Link>}<Link className={linkClass("/client/payments")} href="/client/payments">My Payments</Link><Link className={linkClass("/client/my-bookings")} href="/client/my-bookings">My Bookings</Link><Link className={linkClass("/client/my-reviews")} href="/client/my-reviews">My Reviews</Link><Link className={linkClass("/client/profile")} href="/client/profile">Profile</Link><button className="w-full rounded-lg px-3 py-2 text-left text-sm text-white hover:bg-white/10" disabled={busy} onClick={logout}>{busy?"Signing out…":"Sign out"}</button></>;
  return <>
   {menu && <button aria-label="Close dropdown" className="fixed inset-0 z-40 cursor-default" onClick={()=>setDropdown(null)}/>}
   <header className={`fixed inset-x-0 top-0 z-50 transition-all ${scrolled||!isHome||open?"bg-jungle-950/95 py-3 shadow-lg backdrop-blur-md":"bg-transparent py-5"}`}>
@@ -57,7 +58,7 @@ export default function Navbar({ userName }: { userName: string | null }) {
      </div>
     </div>
     <div className="hidden shrink-0 items-center gap-3 min-[1100px]:flex">
-     {userName?<div className="relative"><button aria-expanded={menu==="account"} aria-controls="account-links" className="px-3 py-2 text-sm text-white" onClick={()=>setDropdown(menu==="account"?null:{path:pathname,kind:"account"})}>My account ▾</button>{menu==="account"&&<div id="account-links" className="absolute right-0 top-full w-48 rounded-xl bg-jungle-950 p-2 shadow-xl">{accountLinks}</div>}</div>:<Link href="/client/login" className="text-sm text-white hover:text-gold">Sign in</Link>}
+     {userName?<div className="relative"><button aria-expanded={menu==="account"} aria-controls="account-links" className="px-3 py-2 text-sm text-white" onClick={()=>setDropdown(menu==="account"?null:{path:pathname,kind:"account"})}>{userRole === "ROLE_ADMIN" ? "Admin account" : "My account"} ▾</button>{menu==="account"&&<div id="account-links" className="absolute right-0 top-full w-64 rounded-xl bg-jungle-950 p-2 shadow-xl">{accountLinks}</div>}</div>:<Link href="/client/login" className="text-sm text-white hover:text-gold">Sign in</Link>}
      <Link href="/client/booking" className="btn-gold !px-4 !py-2.5 whitespace-nowrap">Book Now</Link>
     </div>
     <button className="h-10 w-10 shrink-0 text-2xl text-white min-[1100px]:hidden" aria-label={open?"Close menu":"Open menu"} aria-expanded={open} aria-controls="mobile-navigation" onClick={()=>setOpenPath(open?null:pathname)}>{open?"✕":"☰"}</button>

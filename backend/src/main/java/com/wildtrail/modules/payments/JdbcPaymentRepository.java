@@ -22,7 +22,7 @@ public class JdbcPaymentRepository {
         this.jdbc.update("UPDATE payments SET status=?, paid_at=CASE WHEN ?='PAID' THEN NOW() ELSE paid_at END WHERE id=?", new Object[]{status, status, id});
     }
     public List<Map<String, Object>> payments() {
-        return this.jdbc.queryForList("SELECT p.id, p.booking_id AS \"bookingId\", p.method, p.amount, p.status,\n       p.transaction_ref AS \"transactionRef\", p.card_last4 AS \"cardLast4\",\n       p.paid_at AS \"paidAt\", p.created_at AS \"createdAt\",\n       b.reference AS \"bookingReference\", c.full_name AS \"customerName\"\nFROM payments p JOIN bookings b ON b.id=p.booking_id\nJOIN customers c ON c.id=b.customer_id\nORDER BY p.created_at DESC\n");
+        return this.jdbc.queryForList("SELECT p.id, p.booking_id AS \"bookingId\", p.method, p.amount, p.status,\n       p.transaction_ref AS \"transactionRef\", p.card_last4 AS \"cardLast4\",\n       p.paid_at AS \"paidAt\", p.created_at AS \"createdAt\",\n       b.reference AS \"bookingReference\", c.full_name AS \"customerName\", c.email AS \"customerEmail\", u.role AS \"customerRole\",\n       v.registration_number AS \"vehicleNumber\", b.pickup_place AS \"pickupPlace\"\nFROM payments p JOIN bookings b ON b.id=p.booking_id\nJOIN customers c ON c.id=b.customer_id\nLEFT JOIN users u ON u.id=c.user_id JOIN vehicles v ON v.id=b.vehicle_id\nORDER BY p.created_at DESC\n");
     }
     public Map<String, Object> payment(int id) {
         List<Map<String, Object>> rows = this.jdbc.queryForList("SELECT id, booking_id AS \"bookingId\", method, amount, status,\n       transaction_ref AS \"transactionRef\", card_last4 AS \"cardLast4\", paid_at AS \"paidAt\"\nFROM payments WHERE id=?\n", new Object[]{id});

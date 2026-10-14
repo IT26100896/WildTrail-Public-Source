@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String,String>> methodNotAllowed() {
+        return ResponseEntity.status(405).body(Map.of("error", "This action is not available"));
+    }
     @ExceptionHandler({org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,org.springframework.web.bind.MissingServletRequestParameterException.class})
     public ResponseEntity<Map<String,String>> badParameter(){return ResponseEntity.badRequest().body(Map.of("error","Request parameter is invalid or missing"));}
 

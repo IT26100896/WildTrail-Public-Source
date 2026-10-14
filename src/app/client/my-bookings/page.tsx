@@ -4,14 +4,14 @@ import { PageHero } from "@/components/client/ClientShell";
 import { MyBookingsList } from "@/components/client/forms";
 import { backendApi } from "@/lib/backend-api";
 import type { BookingDetail } from "@/types/domain";
-import { getCustomerSession } from "@/lib/session";
+import { getWebsiteSession } from "@/lib/session";
 import { IMG } from "@/lib/content";
 
 export const metadata = { title: "My Bookings — WildTrail" };
 
 export default async function MyBookingsPage() {
   // The backend returns only bookings owned by this signed-in customer.
-  const me = await getCustomerSession();
+  const me = await getWebsiteSession();
   if (!me) redirect("/client/login?next=/client/my-bookings");
   const bookings = await backendApi<BookingDetail[]>("/api/bookings/mine");
   return (

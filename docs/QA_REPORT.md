@@ -9,10 +9,24 @@
 | ESLint | `npm.cmd run lint` | Frontend source quality |
 | Production build | `npm.cmd run build` | Next.js compilation and route generation |
 | Browser flows | `npm.cmd run qa:browser` | Public routes, authentication, booking, payment, profile, review, and staff pages |
+| Account and review changes | `node qa/account-booking-reviews.mjs` | Administrator website access and personal bookings, payment details/dates, verified identity, public replies, sample deletion and responsive layouts |
+| Vehicle ownership | `node qa/vehicle-owner.mjs` | Vehicle registration and owner create/read/update/delete, mobile editing, saved-field reload and public API privacy |
 | Navigation and access | `node qa/auth-navigation.mjs` | Responsive navigation, staff logout, administrator creation, and customer access limits |
 | Responsive layout | `node qa/responsive-fixes.mjs` | Horizontal overflow and element placement at 320–2133 px |
 
 Install dependencies with `npm.cmd ci` and use JDK 17 for the backend. Run the first four checks from the repository root. Test result files are generated locally and are not committed.
+
+### Account, booking and review update — 14 October 2026
+
+Java 17 Maven verification passed **66 tests**. TypeScript, ESLint and the Next.js production build passed. Browser verification passed **11 general flows**, **9 administrator/booking/review flows** and **4 navigation/access checks** using an isolated H2 database. The new flow checks include administrator personal bookings, pickup/payment details, recorded payment date, immediate review publication, staff replies, deletion, correct name/email attribution and layouts from 320 to 1920 px. The navigation suite also covered effective viewport widths for zoom reflow.
+
+SQL initialization was tested again after removing reviews: the migration marker prevented deleted samples from being reinserted. Vehicle registration validation, duplicate plates, optional-field compatibility and administrator profile/password changes were checked by the Java suite.
+
+The records below describe earlier QA snapshots and their original versions.
+
+### Vehicle owner details — 14 October 2026
+
+The Java test suite passed **69 tests**, including per-vehicle owner storage, public/customer response privacy, owner field validation, omitted-field preservation and explicit clearing. TypeScript, ESLint, backend packaging and the Next.js production build passed. The vehicle owner browser suite passed **4 flows**: create, read/update/reload on mobile, public privacy and delete. Registration numbers were also created, updated, read back after reload and removed with the vehicle.
 
 ## Browser test data
 

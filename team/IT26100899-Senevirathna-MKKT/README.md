@@ -27,6 +27,10 @@ Guide schedules, vehicle availability/maintenance fields, driver assignment and 
 
 ## UI files
 
+Vehicle records include an optional registration number, managed through the vehicle editor and displayed in booking statements. Existing unnumbered vehicles display **Pending assignment**.
+
+The vehicle editor also stores owner name, telephone, address and ID/NIC. These fields are restricted to the administrator fleet view and excluded from public vehicle responses.
+
 - [`src/app/client/vehicles/page.tsx`](../../src/app/client/vehicles/page.tsx)
 - [`src/app/admin/(panel)/vehicles/page.tsx`](../../src/app/admin/%28panel%29/vehicles/page.tsx)
 - [`src/app/admin/(panel)/guides/page.tsx`](../../src/app/admin/%28panel%29/guides/page.tsx)

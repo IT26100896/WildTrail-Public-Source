@@ -3,14 +3,14 @@ import { backendApi } from "@/lib/backend-api";
 import type { PackageDTO } from "@/types/domain";
 import type { VehicleDTO } from "@/types/domain";
 import type { DestinationDTO } from "@/types/domain";
-import { getCustomerSession } from "@/lib/session";
+import { getWebsiteSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
 export const metadata = { title: "Book a Safari — WildTrail" };
 
 export default async function BookingPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const session = await getCustomerSession();
+  const session = await getWebsiteSession();
   // Return unauthenticated customers to the same booking choices after sign-in.
   if (!session) {
     const query = new URLSearchParams(Object.entries(sp).filter((entry): entry is [string, string] => typeof entry[1] === "string")).toString();

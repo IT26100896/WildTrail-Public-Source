@@ -7,7 +7,7 @@
 3. My bookings → change guests; server reprices both booking and pending payment. Another customer cannot edit this booking.
 4. Admin mark actual cash paid → booking CONFIRMED. Future/unpaid safaris cannot be completed. Customer cancellation needs 24 hours notice. Refund only after actual cash returned.
 5. Guide register → `resources.txt` read after restart → assign active booking. One guide per day; overlap blocks conflicting assignment/date edit.
-6. Review submit → admin approve → own edit returns to moderation → delete.
+6. Review submit → immediate public display → administrator reply → owner/admin delete.
 7. Contact inquiry → admin inbox. File reports Save → Read, with password hashes absent.
 
 ## OOP explanation

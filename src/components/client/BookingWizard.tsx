@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import PaymentSummary from "./PaymentSummary";
 import { useEffect, useMemo, useState } from "react";
 import type { PackageDTO } from "@/types/domain";
 import type { VehicleDTO } from "@/types/domain";
@@ -54,7 +55,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
   const quoteKey = `${pkgId}:${vehicleId}:${guests}`;
   const [quoted, setQuoted] = useState<{ key: string; data: { packageCost: number; vehicleCost: number; total: number } } | null>(null);
   const quote = quoted?.key === quoteKey ? quoted.data : null;
-  const [cust, setCust] = useState({ fullName: user?.name ?? "", email: user?.email ?? "", phone: "", country: "", specialRequests: "" });
+  const [cust, setCust] = useState({ fullName: user?.name ?? "", email: user?.email ?? "", phone: "", country: "", pickupPlace: "", specialRequests: "" });
   const [pay, setPay] = useState({ paymentMethod: "CASH" });
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -105,7 +106,7 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
     }
     if (step === 4 && !vehicleId) return setErr("Please choose a vehicle");
     if (step === 5) {
-      if (!cust.fullName.trim() || !cust.phone.trim()) return setErr("Name and phone are required");
+      if (!cust.fullName.trim() || !cust.phone.trim() || !cust.pickupPlace.trim()) return setErr("Name, phone and pickup place are required");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cust.email)) return setErr("Please enter a valid email");
     }
     go(step + 1);
@@ -274,7 +275,8 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
                 <div><label htmlFor="phone-whatsapp" className="label">Phone / WhatsApp *</label><input id="phone-whatsapp" className="input" value={cust.phone} onChange={(e) => setCust({ ...cust, phone: e.target.value })} placeholder="+94 77 123 4567" /></div>
                 <div><label htmlFor="country" className="label">Country</label><input id="country" className="input" value={cust.country} onChange={(e) => setCust({ ...cust, country: e.target.value })} /></div>
               </div>
-              <div className="mt-4"><label htmlFor="hotel-special-requests" className="label">Hotel / special requests</label><textarea id="hotel-special-requests" className="input min-h-28" value={cust.specialRequests} onChange={(e) => setCust({ ...cust, specialRequests: e.target.value })} placeholder="Pickup hotel, dietary needs, child seats…" /></div>
+              <div className="mt-4"><label htmlFor="pickup-place" className="label">Pickup place *</label><input id="pickup-place" className="input" required maxLength={240} value={cust.pickupPlace} onChange={(e) => setCust({ ...cust, pickupPlace: e.target.value })} placeholder="Hotel name, park gate or meeting point" /></div>
+              <div className="mt-4"><label htmlFor="hotel-special-requests" className="label">Special requests</label><textarea id="hotel-special-requests" className="input min-h-28" value={cust.specialRequests} onChange={(e) => setCust({ ...cust, specialRequests: e.target.value })} placeholder="Dietary needs, child seats…" /></div>
             </Panel>
           )}
 
@@ -324,6 +326,8 @@ export default function BookingWizard({ destinations, packages, vehicles, user, 
                   <Row k="Date" v={pkg ? `${fmtDate(date)}${slot ? " · " + fmtTime(slot) : ""}` : undefined} />
                   <Row k="Guests" v={pkg ? String(guests) : undefined} />
                   <Row k="Vehicle" v={vehicle?.name} />
+                  <Row k="Vehicle number" v={vehicle ? vehicle.registrationNumber ?? "Pending assignment" : undefined} />
+                  <Row k="Pickup place" v={cust.pickupPlace || undefined} />
                 </dl>
                 {quote && (
                   <div className="mt-5 space-y-1.5 border-t border-white/10 pt-4 text-sm">
@@ -384,6 +388,8 @@ function Confirmation({ b }: { b: BookingDetail }) {
             ["Destination", b.destinationName],
             ["Package", b.packageName],
             ["Vehicle", b.vehicleName],
+            ["Vehicle number", b.vehicleNumber ?? "Pending assignment"],
+            ["Pickup place", b.pickupPlace ?? "Contact staff to arrange pickup"],
             ["Date", `${fmtDate(b.safariDate)} · ${fmtTime(b.timeSlot)}`],
             ["Guests", String(b.guests)],
             ["Payment method", b.paymentMethod === "CARD" ? (b.transactionRef?.startsWith("DEMO-") ? "Card demo — no charge" : "Card") : "Cash on safari day"],
@@ -399,6 +405,7 @@ function Confirmation({ b }: { b: BookingDetail }) {
           <span className="text-sm text-charcoal/60">Total amount</span>
           <span className="font-display text-4xl font-bold text-jungle-900">{money(b.totalAmount)}</span>
         </div>
+        <div className="px-8 pb-5"><PaymentSummary booking={b} /></div>
         <p className="px-8 py-4 text-xs text-charcoal/50">Transaction ref: {b.transactionRef} · Free cancellation up to 24 hours before departure.</p>
       </div>
       <div className="mt-8 flex flex-wrap justify-center gap-3 print:hidden">
