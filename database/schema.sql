@@ -143,6 +143,10 @@ INSERT INTO guide_schedule_lock(id) SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM gui
 
 -- Nullable additions preserve bookings and vehicles created before these fields existed.
 ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS registration_number VARCHAR(32);
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS owner_name VARCHAR(120);
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS owner_phone VARCHAR(40);
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS owner_address VARCHAR(300);
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS owner_id_number VARCHAR(40);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vehicle_registration ON vehicles(registration_number);
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pickup_place VARCHAR(240);
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS package_amount NUMERIC(10,2);

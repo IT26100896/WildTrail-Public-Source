@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useMemo, useState, type ReactNode } from "react";
 import type { PackageDTO } from "@/types/domain";
-import type { VehicleDTO } from "@/types/domain";
+import type { AdminVehicleDTO } from "@/types/domain";
 import type { BookingDetail, PaymentDetail } from "@/types/domain";
 import { api } from "@/lib/api";
 import { fmtDate, fmtTime, money } from "@/lib/content";
@@ -82,10 +82,11 @@ function useToast() {
 type Field = {
   name: string;
   label: string;
-  type?: "text" | "number" | "textarea" | "select" | "checkbox" | "time" | "email";
+  type?: "text" | "number" | "textarea" | "select" | "checkbox" | "time" | "email" | "tel";
   options?: [string | number, string][];
   full?: boolean;
   step?: string;
+  maxLength?: number;
 };
 type FormValues = Record<string, string | number | boolean>;
 
@@ -124,13 +125,13 @@ function FormModal({ title, fields, initial, onClose, onSubmit }: { title: strin
                 <>
                   <label htmlFor={`field-${f.name}`} className="a-label">{f.label}</label>
                   {f.type === "textarea" ? (
-                    <textarea id={`field-${f.name}`} className="a-input min-h-24" value={String(v[f.name] ?? "")} onChange={(e) => setV({ ...v, [f.name]: e.target.value })} />
+                    <textarea id={`field-${f.name}`} className="a-input min-h-24" maxLength={f.maxLength} value={String(v[f.name] ?? "")} onChange={(e) => setV({ ...v, [f.name]: e.target.value })} />
                   ) : f.type === "select" ? (
                     <select id={`field-${f.name}`} className="a-input" value={String(v[f.name] ?? "")} onChange={(e) => setV({ ...v, [f.name]: e.target.value })}>
                       {f.options?.map(([val, l]) => <option key={val} value={val}>{l}</option>)}
                     </select>
                   ) : (
-                    <input id={`field-${f.name}`} type={f.type ?? "text"} step={f.step} className="a-input" value={String(v[f.name] ?? "")} onChange={(e) => setV({ ...v, [f.name]: e.target.value })} />
+                    <input id={`field-${f.name}`} type={f.type ?? "text"} step={f.step} maxLength={f.maxLength} className="a-input" value={String(v[f.name] ?? "")} onChange={(e) => setV({ ...v, [f.name]: e.target.value })} />
                   )}
                 </>
               )}
@@ -224,12 +225,16 @@ export function PackagesManager({ initial, destinations }: { initial: PackageDTO
 }
 
 // ================================================================ Vehicles
-export function VehiclesManager({ initial }: { initial: VehicleDTO[] }) {
+export function VehiclesManager({ initial }: { initial: AdminVehicleDTO[] }) {
   const { list, save, remove, toast } = useCrud(initial, "/api/vehicles?all=1", "/api/vehicles");
-  const [edit, setEdit] = useState<VehicleDTO | "new" | null>(null);
+  const [edit, setEdit] = useState<AdminVehicleDTO | "new" | null>(null);
   const fields: Field[] = [
     { name: "name", label: "Vehicle name", full: true },
-    { name: "registrationNumber", label: "Vehicle number (registration plate)", full: true },
+    { name: "registrationNumber", label: "Vehicle number (registration plate)", full: true, maxLength: 32 },
+    { name: "ownerName", label: "Owner full name (admin only)", full: true, maxLength: 120 },
+    { name: "ownerPhone", label: "Owner telephone number", type: "tel", maxLength: 40 },
+    { name: "ownerIdNumber", label: "Owner ID / NIC", maxLength: 40 },
+    { name: "ownerAddress", label: "Owner address", type: "textarea", maxLength: 300 },
     { name: "category", label: "Category", type: "select", options: [["STANDARD", "Standard Safari Jeep"], ["HILUX", "Toyota Hilux Safari Jeep"], ["LUXURY", "Luxury Jeep"], ["FAMILY", "Family Safari Jeep"]] },
     { name: "capacity", label: "Capacity (seats)", type: "number" },
     { name: "price", label: "Hire price per safari (USD)", type: "number", step: "0.01" },
@@ -238,13 +243,15 @@ export function VehiclesManager({ initial }: { initial: VehicleDTO[] }) {
     { name: "fourByFour", label: "4x4 drive", type: "checkbox" },
     { name: "available", label: "Available for booking", type: "checkbox" },
   ];
-  const init = (v?: VehicleDTO): FormValues =>
+  const init = (v?: AdminVehicleDTO): FormValues =>
     v
-      ? { name: v.name, registrationNumber: v.registrationNumber ?? "", category: v.category, capacity: v.capacity, price: v.price, imageUrl: v.imageUrl, features: v.features.join(", "), fourByFour: v.fourByFour, available: v.available }
-      : { name: "", registrationNumber: "", category: "STANDARD", capacity: 6, price: 40, imageUrl: "", features: "", fourByFour: true, available: true };
+      ? { name: v.name, registrationNumber: v.registrationNumber ?? "",
+          ownerName: v.ownerName ?? "", ownerPhone: v.ownerPhone ?? "",
+          ownerAddress: v.ownerAddress ?? "", ownerIdNumber: v.ownerIdNumber ?? "", category: v.category, capacity: v.capacity, price: v.price, imageUrl: v.imageUrl, features: v.features.join(", "), fourByFour: v.fourByFour, available: v.available }
+      : { name: "", registrationNumber: "", ownerName: "", ownerPhone: "", ownerAddress: "", ownerIdNumber: "", category: "STANDARD", capacity: 6, price: 40, imageUrl: "", features: "", fourByFour: true, available: true };
   return (
     <>
-      <PageHeader title="Vehicles" sub={`${list.length} vehicles in the fleet`} action={<button className="a-btn" onClick={() => setEdit("new")}>+ New vehicle</button>} />
+      <PageHeader title="Vehicles" sub={`${list.length} vehicles in the fleet · owner details are visible to administrators only`} action={<button className="a-btn" onClick={() => setEdit("new")}>+ New vehicle</button>} />
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {list.map((v) => (
           <div key={v.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -256,6 +263,14 @@ export function VehiclesManager({ initial }: { initial: VehicleDTO[] }) {
               </div>
               <p className="mt-1 text-sm text-slate-500">Vehicle number: {v.registrationNumber ?? "Pending assignment"}<br />{v.capacity} seats · {v.fourByFour ? "4x4" : "2WD"} · <b className="text-slate-800">{money(v.price)}</b></p>
               <p className="mt-2 line-clamp-2 text-xs text-slate-500">{v.allFeatures.join(" · ")}</p>
+              <details className="mt-3 rounded-lg bg-slate-50 p-3 text-xs">
+                <summary className="cursor-pointer font-semibold text-slate-700">Owner details (admin only)</summary>
+                <dl className="mt-3 space-y-2">
+                  {[["Owner name",v.ownerName],["Telephone",v.ownerPhone],["Owner ID / NIC",v.ownerIdNumber],["Address",v.ownerAddress]].map(([label,value]) => <div key={label}>
+                    <dt className="text-slate-500">{label}</dt><dd className="whitespace-pre-wrap break-words text-slate-800">{value || "Not recorded"}</dd>
+                  </div>)}
+                </dl>
+              </details>
               <div className="mt-4 flex gap-2"><button className="a-btn-light flex-1 justify-center" onClick={() => setEdit(v)}>Edit</button><button className="a-btn-danger" onClick={() => remove(v.id, v.name)}>Delete</button></div>
             </div>
           </div>

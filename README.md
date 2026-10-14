@@ -59,7 +59,7 @@ On first setup, the script generates a local administrator password in **`.local
 | Accounts | Customer registration, sign in/out, profile and password updates, protected staff routes, and administrator accounts that also support personal bookings and reviews |
 | Safaris | Searchable destinations and packages, package management, and vehicle catalogue |
 | Reservations | Multi-step booking, server-calculated pricing, availability checks, pickup places, vehicle numbers, booking history, and eligible changes/cancellations with 24-hour notice |
-| Resources | Guide CRUD in `resources.txt`, vehicle management, schedules, and guide assignment |
+| Resources | Guide CRUD in `resources.txt`, vehicle registration and private owner details with fleet CRUD, schedules, and guide assignment |
 | Payments | Cash-on-arrival tracking, a **campus-only card demonstration**, staff-recorded collection/refunds, payment summaries with actual collection dates, and printable receipts |
 | Feedback | Immediately published customer/admin reviews, deletion and administrator replies; removable fictional samples; contact form and staff inbox |
 | Reports | Save/read text snapshots for the six business areas |

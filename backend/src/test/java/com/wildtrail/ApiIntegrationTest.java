@@ -362,6 +362,73 @@ class ApiIntegrationTest {
         } finally { jdbc.update("DELETE FROM vehicles WHERE id=?",id); }
     }
 
+    @Test void vehicleOwnerDetailsPersistAndStayOutOfPublicAndCustomerResponses() throws Exception {
+        JsonNode vehicle=json(mvc.perform(get("/api/vehicles?all=1").cookie(admin)).andReturn()).get(0);
+        Map<String,Object> body=mapper.convertValue(vehicle,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>() {});
+        body.put("name","QA owner vehicle"); body.put("registrationNumber","QA-OWNER-001");
+        body.put("ownerName","Sample Vehicle Owner"); body.put("ownerPhone","+94 77 000 1234");
+        body.put("ownerAddress","QA address, Sample Town"); body.put("ownerIdNumber","owner-test-001");
+        JsonNode saved=json(mvc.perform(post("/api/vehicles").cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(body))).andExpect(status().isCreated()).andReturn());
+        int id=saved.get("id").asInt();
+        try {
+            assertEquals("Sample Vehicle Owner",saved.get("ownerName").asText());
+            assertEquals("OWNER-TEST-001",saved.get("ownerIdNumber").asText());
+            assertEquals("QA address, Sample Town",jdbc.queryForObject("SELECT owner_address FROM vehicles WHERE id=?",String.class,id));
+            JsonNode staff=json(mvc.perform(get("/api/vehicles?all=1").cookie(admin)).andExpect(status().isOk()).andReturn());
+            assertTrue(staff.toString().contains("OWNER-TEST-001"));
+            for (var request : List.of(get("/api/vehicles"),get("/api/vehicles?all=1"),
+                    get("/api/vehicles?all=1").cookie(customer),get("/api/vehicles").cookie(admin))) {
+                JsonNode publicRows=json(mvc.perform(request).andExpect(status().isOk()).andReturn());
+                for (JsonNode row : publicRows) {
+                    for (String field : List.of("ownerName","ownerPhone","ownerAddress","ownerIdNumber")) assertFalse(row.has(field));
+                }
+                assertTrue(publicRows.toString().contains("QA-OWNER-001"));
+                assertFalse(publicRows.toString().contains("OWNER-TEST-001"));
+            }
+            body.put("ownerPhone","+94 77 000 9999");
+            mvc.perform(put("/api/vehicles/"+id).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsString(body))).andExpect(status().isOk()).andExpect(jsonPath("$.ownerPhone").value("+94 77 000 9999"));
+        } finally { mvc.perform(delete("/api/vehicles/"+id).cookie(admin)).andExpect(status().isOk()); }
+    }
+
+    @Test void legacyVehicleUpdatePreservesOwnerDetailsAndExplicitBlankClearsThem() throws Exception {
+        JsonNode vehicle=json(mvc.perform(get("/api/vehicles?all=1").cookie(admin)).andReturn()).get(0);
+        Map<String,Object> body=mapper.convertValue(vehicle,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>() {});
+        body.put("name","QA legacy owner vehicle"); body.put("ownerName","Original QA Owner");
+        body.put("ownerPhone","0770001234"); body.put("ownerAddress","Original QA Address"); body.put("ownerIdNumber","TEST-IDENTITY-002");
+        int id=json(mvc.perform(post("/api/vehicles").cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(body))).andExpect(status().isCreated()).andReturn()).get("id").asInt();
+        try {
+            for (String field : List.of("ownerName","ownerPhone","ownerAddress","ownerIdNumber")) body.remove(field);
+            mvc.perform(put("/api/vehicles/"+id).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsString(body))).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.ownerName").value("Original QA Owner"))
+                    .andExpect(jsonPath("$.ownerIdNumber").value("TEST-IDENTITY-002"));
+            body.put("ownerPhone",""); body.put("ownerIdNumber","");
+            mvc.perform(put("/api/vehicles/"+id).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsString(body))).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.ownerPhone").isEmpty()).andExpect(jsonPath("$.ownerIdNumber").isEmpty());
+            assertEquals("Original QA Address",jdbc.queryForObject("SELECT owner_address FROM vehicles WHERE id=?",String.class,id));
+        } finally { jdbc.update("DELETE FROM vehicles WHERE id=?",id); }
+    }
+
+    @Test void invalidOwnerDetailsAndCustomerWritesAreRejectedBeforeSaving() throws Exception {
+        JsonNode vehicle=json(mvc.perform(get("/api/vehicles?all=1").cookie(admin)).andReturn()).get(0);
+        Map<String,Object> body=mapper.convertValue(vehicle,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>() {});
+        body.put("name","QA invalid owner vehicle");
+        for (var invalid : Map.of("ownerName","A".repeat(121),"ownerPhone","call-me",
+                "ownerAddress","A".repeat(301),"ownerIdNumber","<script>").entrySet()) {
+            body.put(invalid.getKey(),invalid.getValue());
+            mvc.perform(post("/api/vehicles").cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsString(body))).andExpect(status().isBadRequest());
+            body.remove(invalid.getKey());
+        }
+        mvc.perform(post("/api/vehicles").cookie(customer).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(body))).andExpect(status().isForbidden());
+        assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM vehicles WHERE name='QA invalid owner vehicle'",Integer.class));
+    }
+
     @Test void administratorCanUpdateOwnProfileAndPasswordWithoutLosingAccess() throws Exception {
         String original = jdbc.queryForObject("SELECT full_name FROM users WHERE email='qa-admin@example.test'",String.class);
         try {

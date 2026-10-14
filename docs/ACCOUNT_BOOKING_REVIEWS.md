@@ -6,6 +6,7 @@ An administrator can open the website through the console logo or **View website
 
 - **Pickup place** is a separate booking field, collected in the details step and shown in confirmation, booking history, staff booking details and the printable statement.
 - **Vehicle number** is the registration plate recorded under **Admin → Vehicles → Edit**. Existing vehicles without a plate show **Pending assignment**.
+- **Vehicle owner details** include full name, telephone number, address and ID/NIC. Administrators can add/edit them in the fleet form and expand **Owner details (admin only)** on the vehicle card. Public vehicle APIs and pages exclude these details. Old records can remain empty; updates from older clients preserve omitted owner fields.
 - **Payment summary** shows the saved safari cost, vehicle hire, total and recorded payment amount. Existing bookings without a saved cost breakdown show **Included in total**, without recalculating historical prices.
 - **Payment details** include method, status and transaction reference. **My Payments** contains the signed-in account's payment history.
 - **Payment date** comes from the actual collection timestamp. Pending payments show **Not paid yet**. A campus card demonstration remains pending and charges no money.

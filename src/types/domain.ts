@@ -4,6 +4,13 @@ export interface SessionUser { uid: number; email: string; name: string; role: R
 export interface DestinationDTO { id: number; slug: string; name: string; location: string; description: string; bestWildlife: string; safariTypes: string; startingPrice: number; imageUrl: string }
 export interface PackageDTO { id: number; name: string; destinationId: number; destinationName: string; durationHours: number; startTime: string; maxGuests: number; basePrice: number; description: string; imageUrl: string; active: boolean; type: "MORNING" | "EVENING" | "HALF_DAY" | "FULL_DAY" | "PRIVATE" | "FAMILY" | "PHOTOGRAPHY"; typeLabel: string; pricingNote: string; inclusions: string[] }
 export interface VehicleDTO { id: number; name: string; registrationNumber: string | null; capacity: number; fourByFour: boolean; features: string[]; available: boolean; price: number; imageUrl: string; category: "STANDARD" | "HILUX" | "LUXURY" | "FAMILY"; categoryLabel: string; allFeatures: string[] }
+/** Owner details are returned only by the authenticated administrator fleet API. */
+export interface AdminVehicleDTO extends VehicleDTO {
+  ownerName: string | null;
+  ownerPhone: string | null;
+  ownerAddress: string | null;
+  ownerIdNumber: string | null;
+}
 // The joined booking response used by confirmation, customer history and staff views.
 export interface BookingDetail {
   id: number;
