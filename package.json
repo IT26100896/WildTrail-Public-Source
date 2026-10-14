@@ -7,7 +7,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "qa:browser": "node qa/browser.mjs"
+    "qa:browser": "node qa/browser.mjs",
+    "qa:public-registration": "node qa/public-registration-check.mjs"
   },
   "dependencies": {
     "next": "16.4.0",
