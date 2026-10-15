@@ -22,22 +22,29 @@ Java 17 Maven verification passed **66 tests**. TypeScript, ESLint and the Next.
 
 SQL initialization was tested again after removing reviews: the migration marker prevented deleted samples from being reinserted. Vehicle registration validation, duplicate plates, optional-field compatibility and administrator profile/password changes were checked by the Java suite.
 
-The records below describe earlier QA snapshots and their original versions.
-
 ### Vehicle owner details — 14 October 2026
 
 The Java test suite passed **69 tests**, including per-vehicle owner storage, public/customer response privacy, owner field validation, omitted-field preservation and explicit clearing. TypeScript, ESLint, backend packaging and the Next.js production build passed. The vehicle owner browser suite passed **4 flows**: create, read/update/reload on mobile, public privacy and delete. Registration numbers were also created, updated, read back after reload and removed with the vehicle.
 
+The four GitHub `verify` runs on the final head of [merged PR #21](https://github.com/IT26100896/WildTrail-Public-Source/pull/21) completed successfully.
+
+### Documentation consistency — 15 October 2026
+
+Checked **421 local links across 19 tracked Markdown files**, with no missing targets. The project map links all **78 Java source files** and **31 client/admin pages**, including My Payments. README, module ownership, feature notes, report and viva flows were checked against the merged account/payment/review and vehicle owner implementation. This update changes documentation only; it does not rerun the application tests recorded above.
+
 ## Browser test data
 
-The browser script in `qa/browser.mjs` creates customer, booking, payment, and review records. Start the website and API with a **disposable local database**, install Chromium with `npx.cmd playwright install chromium`, then run:
+The scripts [browser.mjs](../qa/browser.mjs), [account-booking-reviews.mjs](../qa/account-booking-reviews.mjs), [auth-navigation.mjs](../qa/auth-navigation.mjs) and [vehicle-owner.mjs](../qa/vehicle-owner.mjs) create demonstration records. Start the website and API with a **disposable local database**, install Chromium with `npx.cmd playwright install chromium`, then run:
 
 ```powershell
 $env:QA_ALLOW_MUTATIONS = '1'
 npm.cmd run qa:browser
+node qa/account-booking-reviews.mjs
+node qa/auth-navigation.mjs
+node qa/vehicle-owner.mjs
 ```
 
-The script refuses to run without `QA_ALLOW_MUTATIONS=1`. Screenshots are written to `qa/screenshots/`, which is excluded from Git. Never run this suite against customer data.
+These mutation suites require `QA_ALLOW_MUTATIONS=1`. Set `QA_CONFIG_PATH` to an ignored local JSON credential file for the disposable test administrator when it differs from the normal setup. Screenshots use `qa/screenshots/`, which is excluded from Git. Never run these suites against customer data.
 
 ## Local verification record — 11 October 2026
 
@@ -45,7 +52,7 @@ The integrated Java 17 Maven suite passed **57 tests**. `npm run lint`, `npm run
 
 `npm audit --omit=dev --audit-level=moderate` reported **0 production dependency findings**. A full `npm audit` reported **5 high-severity entries** in one development-only ESLint dependency chain (`eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces`). The installed `braces` version is 3.0.3; the advisory lists no patched version as of this check. Do not feed untrusted glob patterns to the lint tooling. Recheck the advisory when a maintained upstream fix is published.
 
-The checks were run locally against H2. GitHub Actions, native zoom in every browser, PostgreSQL deployment, and hosted operation require separate verification.
+This 11 October snapshot was local H2 verification; it did not verify GitHub Actions or hosted operation. Later PR #21 CI verification is recorded above. Native zoom in every browser, PostgreSQL deployment and production hosting remain outside these records.
 
 ## Manual review areas
 

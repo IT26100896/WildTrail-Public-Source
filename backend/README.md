@@ -17,6 +17,15 @@ Run from the project root using `scripts/start-backend.ps1 -Build`; see the root
 
 Next.js proxies /api to this Java service; it does not need the session signing secret. Bootstrap inserts catalogue samples only when destinations are empty. Existing accounts are not reset. First admin provision uses BCrypt; registration creates only customers.
 
-SQL is authoritative for users, packages, vehicles, bookings, payments, reviews, messages and guide assignments. `resources.txt` is authoritative for guides. `reports/*.txt` are snapshots, not database restore files. `audit.txt` stores request metadata, without bodies/passwords/card data.
+SQL is authoritative for users, packages, vehicles, bookings, payments, reviews and replies, messages and guide assignments. [database/schema.sql](../database/schema.sql) includes compatible upgrades for existing local records. Catalogue startup data comes from [catalog-seed.sql](src/main/resources/catalog-seed.sql). `resources.txt` is authoritative for guides. `reports/*.txt` are snapshots, not database restore files. `audit.txt` stores request metadata, without bodies/passwords/card data.
+
+## Current account and data behavior
+
+- Session checks select the verified administrator identity first, with customer fallback. Login clears the opposite role cookie and logout clears both. Administrator personal website endpoints still enforce account ownership.
+- Bookings save pickup place and the safari/vehicle price split; joined views expose registration number and payment details. Paid dates represent actual collection, not pending payment creation.
+- Administrator fleet responses include owner name, phone, address and ID/NIC. Public/customer vehicle responses omit them. Vehicle updates preserve omitted owner fields and clear explicitly blank fields; registration plates are normalized and unique.
+- Reviews publish immediately. Authors delete their own reviews; administrators can reply or delete any review. Public review responses omit email addresses. One-time SQL migration tracking prevents deleted fictional samples from being reinserted.
+
+See [the account, booking and review guide](../docs/ACCOUNT_BOOKING_REVIEWS.md) and [QA report](../docs/QA_REPORT.md).
 
 `modules/` holds six member domains; shared security/config/utility files are integration responsibilities. See `../team/` and `../docs/`.

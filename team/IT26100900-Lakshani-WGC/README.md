@@ -7,7 +7,7 @@ Component: **Payment and Transaction Management**
 
 ## Scope
 
-Cash collection, campus-only demo card state, receipts and text file reports belong here. Card details and real charging are not implemented.
+Cash collection, campus-only demo card state, personal payment history, saved cost summaries, actual collection dates, receipts and text file reports belong here. Pending payments show Not paid yet. See [booking/payment details](../../docs/ACCOUNT_BOOKING_REVIEWS.md). Card details and real charging are not implemented.
 
 ## Java files to understand and develop
 
@@ -42,7 +42,7 @@ Cash collection, campus-only demo card state, receipts and text file reports bel
 
 ## Viva demonstration
 
-Create pending payment -> read receipt -> record actual cash -> refund or remove failed record; explain PaymentProcessor polymorphism.
+Create pending payment → inspect My Payments and the saved safari/vehicle cost summary → record actual cash → read the actual payment date, pickup place and registration on the receipt → refund or remove a failed record. Explain PaymentProcessor polymorphism and why a pending payment has no collection date.
 
 ## Persistence and file handling
 

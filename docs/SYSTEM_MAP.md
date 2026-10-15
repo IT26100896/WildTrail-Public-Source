@@ -21,7 +21,7 @@ A booking crosses components: customer identity (01), package and price (02), bo
 
 ### 01. Users — Mekhala B.G.R.S (IT26100894)
 
-Registration, sessions, profiles, administrators, and customer records.
+Registration, shared website/admin identity, sessions, profiles, administrators, and customer records.
 
 | Java role | Classes |
 |---|---|
@@ -47,7 +47,7 @@ Member-specific UI paths and viva steps: [README.md](../team/IT26100895-Mihiran-
 
 ### 03. Bookings — Nayanajith W.R.S.C (IT26100896)
 
-Availability, reservations, changes, cancellation, and status rules.
+Availability, reservations, pickup places, saved price breakdowns, changes, cancellation, and status rules. Customers and administrators can own personal bookings.
 
 | Java role | Classes |
 |---|---|
@@ -60,7 +60,7 @@ Member-specific UI paths and viva steps: [README.md](../team/IT26100896-Nayanaji
 
 ### 04. Resources — Senevirathna M.K.K.T (IT26100899)
 
-Vehicles, guides, assignments, schedules, and guide file CRUD.
+Vehicle registration and private owner CRUD, availability, guides, assignments, schedules, and guide file CRUD. Owner name, phone, address and ID/NIC are returned only in administrator fleet responses.
 
 | Java role | Classes |
 |---|---|
@@ -73,7 +73,7 @@ Member-specific UI paths and viva steps: [README.md](../team/IT26100899-Senevira
 
 ### 05. Payments — Lakshani W.G.C (IT26100900)
 
-Pending payments, cash collection, refunds, and receipts.
+Pending payments, cash collection, actual payment dates, personal payment history, saved cost summaries, refunds, and receipts.
 
 | Java role | Classes |
 |---|---|
@@ -118,8 +118,8 @@ Every website page below is part of the same Next.js application. A page can cal
 
 | Area | Pages |
 |---|---|
-| `client/` | [page.tsx](../src/app/client/about/page.tsx), [page.tsx](../src/app/client/booking/page.tsx), [page.tsx](../src/app/client/contact/page.tsx), [page.tsx](../src/app/client/destinations/page.tsx), [page.tsx](../src/app/client/gallery/page.tsx), [page.tsx](../src/app/client/home/page.tsx), [page.tsx](../src/app/client/login/page.tsx), [page.tsx](../src/app/client/my-bookings/page.tsx), [page.tsx](../src/app/client/my-reviews/page.tsx), [page.tsx](../src/app/client/packages/page.tsx), [page.tsx](../src/app/client/page.tsx), [page.tsx](../src/app/client/profile/page.tsx), [page.tsx](../src/app/client/receipts/%5Bid%5D/page.tsx), [page.tsx](../src/app/client/register/page.tsx), [page.tsx](../src/app/client/reviews/page.tsx), [page.tsx](../src/app/client/safaris/page.tsx), [page.tsx](../src/app/client/vehicles/page.tsx) |
-| `admin/` | [page.tsx](../src/app/admin/%28panel%29/accounts/page.tsx), [page.tsx](../src/app/admin/%28panel%29/bookings/page.tsx), [page.tsx](../src/app/admin/%28panel%29/customers/page.tsx), [page.tsx](../src/app/admin/%28panel%29/dashboard/page.tsx), [page.tsx](../src/app/admin/%28panel%29/files/page.tsx), [page.tsx](../src/app/admin/%28panel%29/guides/page.tsx), [page.tsx](../src/app/admin/%28panel%29/messages/page.tsx), [page.tsx](../src/app/admin/%28panel%29/packages/page.tsx), [page.tsx](../src/app/admin/%28panel%29/payments/page.tsx), [page.tsx](../src/app/admin/%28panel%29/reviews/page.tsx), [page.tsx](../src/app/admin/%28panel%29/vehicles/page.tsx), [page.tsx](../src/app/admin/login/page.tsx), [page.tsx](../src/app/admin/page.tsx) |
+| `client/` | [/client/about](../src/app/client/about/page.tsx), [/client/booking](../src/app/client/booking/page.tsx), [/client/contact](../src/app/client/contact/page.tsx), [/client/destinations](../src/app/client/destinations/page.tsx), [/client/gallery](../src/app/client/gallery/page.tsx), [/client/home](../src/app/client/home/page.tsx), [/client/login](../src/app/client/login/page.tsx), [/client/my-bookings](../src/app/client/my-bookings/page.tsx), [/client/my-reviews](../src/app/client/my-reviews/page.tsx), [/client/packages](../src/app/client/packages/page.tsx), [/client](../src/app/client/page.tsx), [/client/payments](../src/app/client/payments/page.tsx), [/client/profile](../src/app/client/profile/page.tsx), [/client/receipts/[id]](../src/app/client/receipts/%5Bid%5D/page.tsx), [/client/register](../src/app/client/register/page.tsx), [/client/reviews](../src/app/client/reviews/page.tsx), [/client/safaris](../src/app/client/safaris/page.tsx), [/client/vehicles](../src/app/client/vehicles/page.tsx) |
+| `admin/` | [/admin/accounts](../src/app/admin/%28panel%29/accounts/page.tsx), [/admin/bookings](../src/app/admin/%28panel%29/bookings/page.tsx), [/admin/customers](../src/app/admin/%28panel%29/customers/page.tsx), [/admin/dashboard](../src/app/admin/%28panel%29/dashboard/page.tsx), [/admin/files](../src/app/admin/%28panel%29/files/page.tsx), [/admin/guides](../src/app/admin/%28panel%29/guides/page.tsx), [/admin/messages](../src/app/admin/%28panel%29/messages/page.tsx), [/admin/packages](../src/app/admin/%28panel%29/packages/page.tsx), [/admin/payments](../src/app/admin/%28panel%29/payments/page.tsx), [/admin/reviews](../src/app/admin/%28panel%29/reviews/page.tsx), [/admin/vehicles](../src/app/admin/%28panel%29/vehicles/page.tsx), [/admin/login](../src/app/admin/login/page.tsx), [/admin](../src/app/admin/page.tsx) |
 | Routing/layout | [layout.tsx](../src/app/admin/%28panel%29/layout.tsx), [layout.tsx](../src/app/admin/layout.tsx), [layout.tsx](../src/app/client/layout.tsx), [error.tsx](../src/app/error.tsx), [layout.tsx](../src/app/layout.tsx) |
 
 ## Shared website components and contracts
@@ -146,10 +146,10 @@ Shared files can contain functions from several modules. Ownership follows the f
 
 ## Cross-module dependencies to explain in the viva
 
-1. **Users → bookings:** the authenticated customer owns the booking; staff access is role checked by the Java API.
+1. **Users → bookings:** the authenticated customer or administrator owns a personal booking; staff access is role checked by the Java API.
 2. **Safaris + resources → bookings:** package rules set price and guest limits; vehicle availability and capacity protect the reserved slot.
 3. **Bookings → payments:** creating or changing a booking coordinates the related pending payment and price in a transaction.
-4. **Customers + reviews:** a signed-in customer can manage their own review; reviews appear immediately and staff can reply or delete them.
+4. **Customers + reviews:** a signed-in customer or administrator can publish and delete their own review; publication is immediate. Administrators can reply to reviews and delete any review. Public views omit account emails.
 5. **H2 + files:** SQL is authoritative for most records. Guide CRUD really reads/writes `resources.txt`; staff text reports are snapshots.
 
 The [main README](../README.md) gives the overview, [workload guide](WORKLOAD_DISTRIBUTION.md) assigns responsibilities, and [viva guide](VIVA_GUIDE.md) gives the demonstration route. This map lists implementation locations; the Git history is the evidence for specific individual changes.
