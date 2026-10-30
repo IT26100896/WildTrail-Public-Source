@@ -16,8 +16,7 @@ Plan a Sri Lankan wildlife safari, manage reservations, and run the supporting s
 
 </div>
 
-> [!NOTE]
-> This is a university project and campus demonstration. Catalogue entries and labeled example reviews are sample content. Card payment is simulated: no card details are collected and no money is charged.
+
 
 ## At a glance
 
